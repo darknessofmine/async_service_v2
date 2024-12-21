@@ -1,4 +1,4 @@
-from sqlalchemy import String
+from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -15,5 +15,5 @@ class User(Base, IntIdPkMixin):
     )
     password: Mapped[str] = mapped_column(String(32))
     email: Mapped[str] = mapped_column(String(256), unique=True)
-    is_active: Mapped[bool] = mapped_column(server_default=True)
-    is_superuser: Mapped[bool] = mapped_column(server_default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
