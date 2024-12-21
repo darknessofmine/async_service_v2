@@ -29,9 +29,14 @@ class AppSettings(BaseModel):
     reload: bool = True
 
 
+class AccessTokenSettings(BaseModel):
+    lifetime_seconds: int = 3600
+
+
 class Settings(BaseSettings):
     app: AppSettings = AppSettings()
     db: DatabaseSettings = DatabaseSettings()
+    access_token: AccessTokenSettings = AccessTokenSettings()
 
 
 settings = Settings()
