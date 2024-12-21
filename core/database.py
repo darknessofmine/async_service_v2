@@ -21,7 +21,10 @@ class Database:
             autocommit=False,
             expire_on_commit=False,
         )
-    
+
     async def get_async_session(self) -> AsyncGenerator[AsyncSession, None]:
         async with self.session_maker() as session:
             yield session
+
+
+db = Database()

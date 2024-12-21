@@ -3,16 +3,20 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DatabaseSettings(BaseModel):
+    model_config = SettingsConfigDict(env_file=".env")
+
     DB_USER: str
     DB_PASS: str
     DB_HOST: str
     DB_PORT: int
     DB_NAME: str
 
-    url: str = f"sqlalchemy+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     echo: bool = True
 
-    model_config = SettingsConfigDict(env_file=".env")
+    @property
+    def url(self):
+        return (f"sqlalchemy+asyncpg://{self.DB_USER}:{self.DB_PASS}"
+                f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}")
 
 
 class AppSettings(BaseModel):
