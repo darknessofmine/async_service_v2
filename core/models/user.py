@@ -14,5 +14,5 @@ class User(Base, IdIntPkMixin, SQLAlchemyBaseUserTable[int]):
     email: Mapped[str] = mapped_column(String(length=320), unique=True)
 
     @classmethod
-    def get_db(cls, session: AsyncSession):
+    async def get_db(cls, session: AsyncSession) -> SQLAlchemyUserDatabase:
         return SQLAlchemyUserDatabase(session, cls)
