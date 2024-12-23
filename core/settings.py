@@ -1,3 +1,5 @@
+from fastapi.security import HTTPBearer, OAuth2PasswordBearer
+
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -21,6 +23,11 @@ class DatabaseSettings(BaseSettings):
         )
 
 
+class AuthSettings(BaseModel):
+    transport = HTTPBearer(auto_error=False)
+    oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+
 class AppSettings(BaseModel):
     host: str = "127.0.0.1"
     port: int = 8000
@@ -29,6 +36,7 @@ class AppSettings(BaseModel):
 
 class Settings(BaseSettings):
     app: AppSettings = AppSettings()
+    auth: AuthSettings = AuthSettings()
     db: DatabaseSettings = DatabaseSettings()
 
 

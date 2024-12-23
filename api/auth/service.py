@@ -26,11 +26,13 @@ class AuthService:
         self.user_repo: UserRepo = user_repo
         self.session: AsyncSession = session
 
+    # Crete new user
     async def create_user(self,
                           user_create: user_schemas.UserCreate) -> "User":
         user_dict = user_create.model_dump()
         return await self.user_repo.create(user_dict, self.session)
 
+    # Get user by username and password or raise exception.
     async def validate_auth_user(self,
                                  user: user_schemas.UserLogin) -> "User":
         validated_user = await self.user_repo.get_one(
@@ -44,6 +46,7 @@ class AuthService:
             )
         return validated_user
 
+    # Create new token for user.
     async def create_access_token(self, user_id: int) -> "AccessToken":
         token_dict = {
             "token": str(token_utils.generate_uuid_access_token()),
