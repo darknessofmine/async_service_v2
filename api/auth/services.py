@@ -8,6 +8,7 @@ from .access_token.repositories import AccessTokenRepo
 from api.users import schemas as user_schemas
 from api.users.repositories import UserRepo
 from core.database import db
+from core.settings import settings
 
 
 if TYPE_CHECKING:
@@ -15,7 +16,6 @@ if TYPE_CHECKING:
 
 
 class AuthService:
-
     def __init__(
         self,
         token_repo: Annotated[AccessTokenRepo, Depends(AccessTokenRepo)],
@@ -53,3 +53,20 @@ class AuthService:
             "user_id": user_id,
         }
         return await self.token_repo.create(token_dict, self.session)
+
+
+class UserValidationService:
+    def __init__(
+        self,
+        token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
+        token_repo: Annotated[AccessTokenRepo, Depends(AccessTokenRepo)],
+        user_repo: Annotated[UserRepo, Depends(UserRepo)],
+        session: Annotated[AsyncSession, Depends(db.get_async_session)],
+    ) -> None:
+        self.token = token
+        self.token_repo: AccessTokenRepo = token_repo
+        self.user_repo: UserRepo = user_repo
+        self.session: AsyncSession = session
+
+    async def get_token_payload(self):
+        ...

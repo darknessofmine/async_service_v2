@@ -23,9 +23,11 @@ class DatabaseSettings(BaseSettings):
         )
 
 
-class AuthSettings(BaseModel):
-    transport = HTTPBearer(auto_error=False)
-    oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+class AuthSettings(BaseSettings):
+    transport: HTTPBearer = HTTPBearer(auto_error=False)
+    oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(
+        tokenUrl="/auth/login"
+    )
 
 
 class AppSettings(BaseModel):
