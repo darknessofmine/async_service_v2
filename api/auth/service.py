@@ -29,4 +29,4 @@ class AuthService:
         user_create: user_schemas.UserCreate,
     ) -> "User":
         user_dict = user_create.model_dump()
-        return await UserRepo().create(user_dict, self.session)
+        return await self.user_repo.create(user_dict, self.session)
