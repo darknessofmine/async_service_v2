@@ -27,7 +27,7 @@ class GetOneRepo[T]:
         self,
         filters: dict[str, Any],
         session: AsyncSession,
-    ) -> T:
+    ) -> T | None:
         stmt = select(self.model)
         for key, value in filters.items():
             if hasattr(self.model, key):

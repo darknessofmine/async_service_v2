@@ -10,10 +10,10 @@ class AccessToken(Base):
     __tablename__ = "access_tokens"
 
     token: Mapped[str] = mapped_column(String(128), primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+    )
     created: Mapped[datetime] = mapped_column(
         default=datetime.now(timezone.utc),
         index=True,
-    )
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
     )
