@@ -1,8 +1,6 @@
-from datetime import datetime, timezone
-
-from sqlalchemy import ForeignKey, String
+from datetime import datetime
+from sqlalchemy import ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column
-
 from .base import Base
 
 
@@ -14,6 +12,6 @@ class AccessToken(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
     )
     created: Mapped[datetime] = mapped_column(
-        default=datetime.now(timezone.utc),
+        default=func.now(),
         index=True,
     )

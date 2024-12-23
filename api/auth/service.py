@@ -33,20 +33,20 @@ class AuthService:
 
     async def validate_auth_user(self,
                                  user: user_schemas.UserLogin) -> "User":
-        verified_user = await self.user_repo.get_one(
+        validated_user = await self.user_repo.get_one(
             filters=user.model_dump(),
             session=self.session,
         )
-        if verified_user is None:
+        if validated_user is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password!",
             )
-        return verified_user
+        return validated_user
 
     async def create_access_token(self, user_id: int) -> "AccessToken":
         token_dict = {
-            "token": token_utils.generate_uuid_access_token(),
+            "token": str(token_utils.generate_uuid_access_token()),
             "user_id": user_id,
         }
         return await self.token_repo.create(token_dict, self.session)
