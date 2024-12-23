@@ -1,30 +1,33 @@
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-if TYPE_CHECKING:
-    from core.models import Base
 
+class CreateRepo[T]:
 
-class CreateRepo:
-    model: "Base" = None
+    model: T = None
 
-    async def create(self, data_dict: dict, session: AsyncSession) -> "Base":
+    async def create(
+        self,
+        data_dict: dict[str, Any],
+        session: AsyncSession,
+    ) -> T:
         new_obj = self.model(**data_dict)
         session.add(new_obj)
         await session.commit()
         return new_obj
 
 
-class GetOneRepo:
-    model: "Base" = None
+class GetOneRepo[T]:
+
+    model: T = None
 
     async def get_one(
         self,
         filters: dict[str, Any],
         session: AsyncSession,
-    ) -> "Base":
+    ) -> T:
         stmt = select(self.model)
         for key, value in filters.items():
             if hasattr(self.model, key):
@@ -32,8 +35,9 @@ class GetOneRepo:
         return await session.scalar(stmt)
 
 
-class DeleteRepo:
-    model: "Base" = None
+class DeleteRepo[T]:
+
+    model: T = None
 
     async def delete(self, session: AsyncSession) -> None:
         await session.delete(self.model)
