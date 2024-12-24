@@ -19,8 +19,8 @@ router = APIRouter(
              response_model=UserResponse,
              status_code=status.HTTP_200_OK)
 async def signup(
-    user_create: UserCreate,
     auth_service: Annotated[AuthService, Depends(AuthService)],
+    user_create: UserCreate,
 ) -> UserResponse:
     return await auth_service.create_user(user_create)
 
@@ -35,11 +35,13 @@ async def login(
     return await auth_service.get_access_token_for_user(user)
 
 
-@router.get("/me")
+@router.get("/me",
+            response_model=UserResponse,
+            status_code=status.HTTP_200_OK)
 async def me(
     validation_service: Annotated[
         UserValidationService,
         Depends(UserValidationService),
     ],
-) -> str:
-    ...
+) -> UserResponse:
+    return await validation_service.get_current_user()

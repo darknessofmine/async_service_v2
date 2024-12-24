@@ -24,4 +24,6 @@ class User(Base, IntIdPkMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    token: Mapped[Optional["AccessToken"]] = relationship()
+    token: Mapped[Optional["AccessToken"]] = relationship(
+        back_populates="user",
+    )
