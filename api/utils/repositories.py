@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class CreateRepo[T]:
-
     model: T = None
 
     async def create(
@@ -20,7 +19,6 @@ class CreateRepo[T]:
 
 
 class GetOneRepo[T]:
-
     model: T = None
 
     async def get_one(
@@ -36,7 +34,6 @@ class GetOneRepo[T]:
 
 
 class DeleteRepo[T]:
-
     model: T = None
 
     async def delete(self, session: AsyncSession) -> None:

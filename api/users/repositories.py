@@ -6,5 +6,4 @@ from core.models import User
 class UserRepo(CreateRepo[User],
                GetOneRepo[User],
                DeleteRepo[User]):
-
     model = User
