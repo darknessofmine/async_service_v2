@@ -1,8 +1,14 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import String, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
 from .mixins import IntIdPkMixin
+
+
+if TYPE_CHECKING:
+    from core.models import AccessToken
 
 
 class User(Base, IntIdPkMixin):
@@ -17,3 +23,5 @@ class User(Base, IntIdPkMixin):
     email: Mapped[str] = mapped_column(String(256), unique=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    token: Mapped["AccessToken"] | None = relationship()
