@@ -19,7 +19,7 @@ class User(Base, IntIdPkMixin):
         unique=True,
         index=True
     )
-    password: Mapped[str] = mapped_column(String(32))
+    password: Mapped[str] = mapped_column(String(256))
     email: Mapped[str] = mapped_column(String(256), unique=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
