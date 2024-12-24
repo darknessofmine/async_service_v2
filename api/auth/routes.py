@@ -32,8 +32,7 @@ async def login(
     auth_service: Annotated[AuthService, Depends(AuthService)],
     user: UserLogin = Form(),
 ) -> AccessTokenInfo:
-    validated_user = await auth_service.validate_auth_user(user)
-    return await auth_service.create_access_token(user_id=validated_user.id)
+    return await auth_service.get_access_token_for_user(user)
 
 
 @router.get("/me")

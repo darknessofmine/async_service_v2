@@ -32,10 +32,11 @@ class AuthService:
         user_dict = user_create.model_dump()
         return await self.user_repo.create(user_dict, self.session)
 
-    # Get user by username and password or raise exception.
+    # Get user by username and password (with token),
+    # raise exception if user does't exist.
     async def validate_auth_user(self,
                                  user: user_schemas.UserLogin) -> "User":
-        validated_user = await self.user_repo.get_one(
+        validated_user = await self.user_repo.get_one_with_token(
             filters=user.model_dump(),
             session=self.session,
         )
@@ -46,11 +47,18 @@ class AuthService:
             )
         return validated_user
 
-    # Create new token for user.
-    async def create_access_token(self, user_id: int) -> "AccessToken":
+    # Create and return new token for validated user if it doesn't exist yet,
+    # otherwise get and return current token.
+    async def get_access_token_for_user(
+        self,
+        user: user_schemas.UserLogin
+    ) -> "AccessToken":
+        validated_user = await self.validate_auth_user(user)
+        if validated_user.token is not None:
+            return validated_user.token
         token_dict = {
             "token": str(token_utils.generate_uuid_access_token()),
-            "user_id": user_id,
+            "user_id": validated_user.id,
         }
         return await self.token_repo.create(token_dict, self.session)
 
