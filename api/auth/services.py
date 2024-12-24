@@ -1,6 +1,7 @@
 from typing import Annotated, TYPE_CHECKING
 
 from fastapi import Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .access_token import utils as token_utils
@@ -29,8 +30,17 @@ class AuthService:
     async def create_user(self,
                           user_create: user_schemas.UserCreate) -> "User":
         """Crete new user"""
-        user_dict = user_create.model_dump()
-        return await self.user_repo.create(user_dict, self.session)
+        try:
+            user_dict = user_create.model_dump()
+            return await self.user_repo.create(user_dict, self.session)
+
+        except IntegrityError as error:
+            orig_detail = error.__dict__["orig"]
+            error_field = str(orig_detail).split("\"")[3]
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"User with {error_field} already exists!",
+            )
 
     async def validate_auth_user(self,
                                  user: user_schemas.UserLogin) -> "User":
@@ -66,28 +76,21 @@ class AuthService:
         }
         return await self.token_repo.create(token_dict, self.session)
 
-
-class UserValidationService:
-    def __init__(
-        self,
+    @staticmethod
+    async def get_current_user(
         token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
         token_repo: Annotated[AccessTokenRepo, Depends(AccessTokenRepo)],
         session: Annotated[AsyncSession, Depends(db.get_async_session)],
-    ) -> None:
-        self.token: str = token
-        self.token_repo: AccessTokenRepo = token_repo
-        self.session: AsyncSession = session
-
-    async def get_current_user(self) -> "User":
+    ) -> "User":
         """
         Get and return current session user by access token,
         raise `http_401_unauthorized` exception if token is invalid.
         """
-        validated_token = await self.token_repo.get_one_with_user(
-            filters={"token": self.token},
-            session=self.session,
+        validated_token = await token_repo.get_one_with_user(
+            filters={"token": token},
+            session=session,
         )
-        if validated_token.user is None:
+        if validated_token is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid access token!",
