@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from . import utils as auth_utils
 from .access_token import utils as token_utils
 from .access_token.repositories import AccessTokenRepo
 from api.users import schemas as user_schemas
@@ -28,10 +29,10 @@ class AuthService:
         self.session: AsyncSession = session
 
     async def create_user(self,
-                          user_create: user_schemas.UserCreate) -> "User":
+                          user: user_schemas.UserCreate) -> "User":
         """Crete new user"""
         try:
-            user_dict = user_create.model_dump()
+            user_dict = auth_utils.user_dict_hash_password(user.model_dump())
             return await self.user_repo.create(user_dict, self.session)
 
         except IntegrityError as error:
@@ -48,8 +49,9 @@ class AuthService:
         Get user by username and password (with token),
         raise `http_401_unauthorized` exception if user does't exist.
         """
+        user_dict = auth_utils.user_dict_hash_password(user.model_dump())
         validated_user = await self.user_repo.get_one_with_token(
-            filters=user.model_dump(),
+            filters=user_dict,
             session=self.session,
         )
         if validated_user is None:

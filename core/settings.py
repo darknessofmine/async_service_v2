@@ -28,6 +28,7 @@ class AuthSettings(BaseSettings):
     oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(
         tokenUrl="/auth/login"
     )
+    salt: str = "dakenssofmine"
 
 
 class AppSettings(BaseModel):
