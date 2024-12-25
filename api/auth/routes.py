@@ -45,6 +45,21 @@ async def logout(
     return {"message": "You've successfully logged out."}
 
 
+@router.post("/change-password", status_code=status.HTTP_201_CREATED)
+async def change_password(
+    auth_service: Annotated[AuthService, Depends(AuthService)],
+    current_user: Annotated[User, Depends(AuthService.get_current_user)],
+    old_password: str,
+    new_password: str,
+) -> dict[str, str]:
+    await auth_service.change_user_password(
+        current_user,
+        old_password=old_password,
+        new_password=new_password
+    )
+    return {"message": "Password successfully changed!"}
+
+
 @router.get("/me",
             response_model=UserResponse,
             status_code=status.HTTP_200_OK)

@@ -30,7 +30,12 @@ class AuthService:
 
     async def create_user(self,
                           user: user_schemas.UserCreate) -> "User":
-        """Crete new user"""
+        """
+        Crete new user.
+
+        Raise `http_400_bad_request` exception if user with provided
+        `useername` or `email` already exists.
+        """
         try:
             user_dict = auth_utils.user_dict_hash_password(user.model_dump())
             return await self.user_repo.create(user_dict, self.session)
@@ -85,6 +90,34 @@ class AuthService:
             session=self.session,
         )
 
+    async def change_user_password(self,
+                                   user: "User",
+                                   old_password: str,
+                                   new_password: str) -> None:
+        """
+        Set new password (hashed) to a user.
+
+        Raise `http_400_bad_request` exception if provided old_password
+        is different from the current one, or if new_password is the same
+        as the old one.
+        """
+        if not auth_utils.is_password_same(user.password, old_password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid current password."
+            )
+        if auth_utils.is_password_same(user.password, new_password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password has to be different from the old one."
+            )
+        new_password_hashed = auth_utils.hash_password(new_password)
+        await self.user_repo.update(
+            update_dict={"password": new_password_hashed},
+            filters={"user_id": user.id},
+            session=self.session,
+        )
+
     @staticmethod
     async def get_current_user(
         token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
@@ -92,13 +125,16 @@ class AuthService:
         session: Annotated[AsyncSession, Depends(db.get_async_session)],
     ) -> "User":
         """
-        Get and return current session user by access token,
-        raise `http_401_unauthorized` exception if token is invalid.
+        ** Static method **
+
+        Get and return current session user by provided access token,
+        raise `http_401_unauthorized` exception if token is invalid or
+        hasn't been provided.
 
         ** Warning! **
 
         If this method is injected by `Depends()` into a route function,
-        only `authenticated` users will be allowed to user it.
+        only `authenticated` users will be allowed to use it.
         """
         validated_token = await token_repo.get_one_with_user(
             filters={"token": token},

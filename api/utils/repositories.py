@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -27,6 +27,22 @@ class GetOneRepo[T]:
             if hasattr(self.model, key):
                 stmt = stmt.filter(getattr(self.model, key) == value)
         return await session.scalar(stmt)
+
+
+class UpdateRepo[T]:
+    model: T = None
+
+    async def update(self,
+                     update_dict: dict[str, Any],
+                     filters: dict[str, Any],
+                     session: AsyncSession) -> T:
+        stmt = update(self.model).values(update_dict)
+        for key, value in filters.items():
+            if hasattr(self.model, key):
+                stmt = stmt.filter(getattr(self.model, key) == value)
+        updated = await session.execute(stmt)
+        await session.commit()
+        return updated
 
 
 class DeleteRepo[T]:
