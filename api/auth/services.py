@@ -90,22 +90,25 @@ class AuthService:
             session=self.session,
         )
 
-    async def change_user_password(self,
-                                   user: "User",
-                                   old_password: str,
-                                   new_password: str) -> None:
+    async def change_user_password(
+        self,
+        user: "User",
+        new_password: str,
+        old_password: str | None = None,
+    ) -> None:
         """
-        Set new password (hashed) to a user.
+        Set a new password (hashed) for a user.
 
-        Raise `http_400_bad_request` exception if provided old_password
-        is different from the current one, or if new_password is the same
-        as the old one.
+        Raise `http_400_bad_request` exception if old_password is provided
+        and is different from the current one, or if new_password is the same
+        as the current one.
         """
-        if not auth_utils.is_password_same(user.password, old_password):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid current password."
-            )
+        if old_password is not None:
+            if not auth_utils.is_password_same(user.password, old_password):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid current password."
+                )
         if auth_utils.is_password_same(user.password, new_password):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -127,7 +130,7 @@ class AuthService:
         """
         ** Static method **
 
-        Get and return current session user by provided access token,
+        Get current session user by provided access token,
         raise `http_401_unauthorized` exception if token is invalid or
         hasn't been provided.
 

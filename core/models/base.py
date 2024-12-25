@@ -1,8 +1,13 @@
+from typing import Any
+
 from sqlalchemy.orm import DeclarativeBase
 
 
 class Base(DeclarativeBase):
     __abstract__ = True
+
+    def as_dict(self) -> dict[str, Any]:
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def __repr__(self) -> str:
         if hasattr(self, id):
