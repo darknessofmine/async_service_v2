@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DatabaseSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     DB_USER: str
     DB_PASS: str
@@ -24,11 +24,17 @@ class DatabaseSettings(BaseSettings):
 
 
 class AuthSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    SALT: str
+
     transport: HTTPBearer = HTTPBearer(auto_error=False)
     oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(
         tokenUrl="/auth/login"
     )
-    salt: str = "dakenssofmine"
+
+    @property
+    def salt(self) -> str:
+        return self.SALT
 
 
 class AppSettings(BaseModel):
