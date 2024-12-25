@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
-class AccessTokenInfo(BaseModel):
-    access_token: str = Field(validation_alias="token")
+class TokenInfo(BaseModel):
+    access_token: str
+    refresh_token: str | None = None
     token_type: str = "Bearer"

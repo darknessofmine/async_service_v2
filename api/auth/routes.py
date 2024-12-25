@@ -4,7 +4,7 @@ from fastapi import APIRouter, Form, Depends, status
 
 from .services import AuthService
 from api.users.schemas import UserCreate, UserLogin, UserResponse
-from api.auth.access_token.schemas import AccessTokenInfo
+from api.auth.access_token.schemas import TokenInfo
 from core.settings import settings
 from core.models import User
 
@@ -27,13 +27,14 @@ async def signup(
 
 
 @router.post("/login",
-             response_model=AccessTokenInfo,
+             response_model=TokenInfo,
              status_code=status.HTTP_200_OK)
 async def login(
     auth_service: Annotated[AuthService, Depends(AuthService)],
     user: UserLogin = Form(),
-) -> AccessTokenInfo:
-    return await auth_service.get_access_token_for_user(user)
+) -> TokenInfo:
+    tokens = await auth_service.get_access_and_refresh_tokens_for_user(user)
+    return TokenInfo(**tokens)
 
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
