@@ -55,7 +55,7 @@ class AuthService:
         raise `http_401_unauthorized` exception if user does't exist.
         """
         user_dict = auth_utils.user_dict_hash_password(user.model_dump())
-        validated_user = await self.user_repo.get_one(
+        validated_user = await self.user_repo.get_one_with_token(
             filters=user_dict,
             session=self.session,
         )
@@ -72,23 +72,24 @@ class AuthService:
     ) -> dict[str, str]:
         """
         Create and return `dict` with access and refresh tokens
-        for validated user.
+        for validated user. If refresh token already exists, return it instead.
 
         Refresh is stored in database.
         """
         validated_user = await self.validate_auth_user(user)
-        refresh_token = token_utils.create_refresh_token(validated_user)
-        await self.token_repo.create(
-            data_dict={
-                "token": refresh_token,
-                "user_id": validated_user.id,
-            },
-            session=self.session,
-        )
-        return {
+        tokens = {
             "access_token": token_utils.create_access_token(validated_user),
-            "refresh_token": refresh_token,
+            "refresh_token": token_utils.create_refresh_token(validated_user),
         }
+        if validated_user.token is None:
+            await self.token_repo.create(
+                data_dict={
+                    "token": tokens["refresh_token"],
+                    "user_id": validated_user.id,
+                },
+                session=self.session,
+            )
+        return tokens
 
     async def change_user_password(
         self,

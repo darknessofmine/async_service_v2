@@ -1,10 +1,15 @@
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
 from core.settings import settings
+
+
+if TYPE_CHECKING:
+    from core.models import User
 
 
 class AccessToken(Base):
@@ -20,3 +25,5 @@ class AccessToken(Base):
         ),
         index=True,
     )
+
+    user: Mapped["User"] = relationship(back_populates="token")
