@@ -36,6 +36,15 @@ async def login(
     return await auth_service.get_access_token_for_user(user)
 
 
+@router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout(
+    auth_service: Annotated[AuthService, Depends(AuthService)],
+    current_user: Annotated[User, Depends(AuthService.get_current_user)],
+) -> dict[str, str]:
+    await auth_service.delete_access_token(current_user)
+    return {"message": "You've successfully logged out."}
+
+
 @router.get("/me",
             response_model=UserResponse,
             status_code=status.HTTP_200_OK)

@@ -5,8 +5,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DatabaseSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-
     DB_USER: str
     DB_PASS: str
     DB_HOST: str
@@ -22,10 +20,11 @@ class DatabaseSettings(BaseSettings):
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
 
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
 
 class AuthSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-    SALT: str
+    HASH_SALT: str
 
     transport: HTTPBearer = HTTPBearer(auto_error=False)
     oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(
@@ -34,7 +33,9 @@ class AuthSettings(BaseSettings):
 
     @property
     def salt(self) -> str:
-        return self.SALT
+        return self.HASH_SALT
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 class AppSettings(BaseModel):

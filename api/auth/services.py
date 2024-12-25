@@ -78,6 +78,13 @@ class AuthService:
         }
         return await self.token_repo.create(token_dict, self.session)
 
+    async def delete_access_token(self, user: "User") -> None:
+        """Delete user's access token."""
+        await self.token_repo.delete(
+            filters={"user_id": user.id},
+            session=self.session,
+        )
+
     @staticmethod
     async def get_current_user(
         token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
@@ -87,6 +94,11 @@ class AuthService:
         """
         Get and return current session user by access token,
         raise `http_401_unauthorized` exception if token is invalid.
+
+        ** Warning! **
+
+        If this method is injected by `Depends()` into a route function,
+        only `authenticated` users will be allowed to user it.
         """
         validated_token = await token_repo.get_one_with_user(
             filters={"token": token},
