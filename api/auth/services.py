@@ -150,6 +150,33 @@ class AuthService:
         )
 
     @staticmethod
+    async def get_user_by_token(
+        token: str,
+        expected_type: str,
+        user_repo: UserRepo,
+        session: AsyncSession,
+    ) -> "User":
+        """
+        ** Static method **
+
+        Get session user by provided token,
+        raise `http_401_unauthorized` exception if token has
+        unexpected type or is invalid.
+        """
+        validated_token = token_utils.get_token_payload(token)
+        token_type = validated_token.get("type")
+        if token_type != expected_type:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=(f"Invalid token type: {token_type}! "
+                        f"Expected: {expected_type}.")
+            )
+        return await user_repo.get_one(
+            filters={"username": validated_token.get("sub")},
+            session=session
+        )
+
+    @staticmethod
     async def get_current_user(
         token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
         user_repo: Annotated[UserRepo, Depends(UserRepo)],
@@ -158,23 +185,40 @@ class AuthService:
         """
         ** Static method **
 
-        Get current session user by provided access token,
-        raise `http_401_unauthorized` exception if token is invalid or
-        hasn't been provided.
+        Get current session user by provided `access_token`.
 
         ** Warning! **
 
         If this method is injected by `Depends()` into a route function,
         only `authenticated` users will be allowed to use it.
         """
-        validated_token = token_utils.get_token_payload(token)
-        token_type = validated_token.get("token_type")
-        if token_type != "access":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Invalid token type: {token_type}! Expected: access."
-            )
-        return await user_repo.get_one(
-            filters={"username": validated_token.get("sub")},
-            session=session
+        return await AuthService.get_user_by_token(
+            token=token,
+            expected_type="access",
+            user_repo=user_repo,
+            session=session,
+        )
+
+    @staticmethod
+    async def get_user_by_reset_token(
+        token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
+        user_repo: Annotated[UserRepo, Depends(UserRepo)],
+        session: Annotated[AsyncSession, Depends(db.get_async_session)],
+    ) -> "User":
+        """
+        ** Static method **
+
+        Get current session user by provided `reset_token`.
+
+        ** Warning! **
+
+        If this method is injected by `Depends()` into a route function,
+        only users authenticated by reset_token will be allowed to use it.
+        Reset token is used only for password reset and has short lifetime.
+        """
+        return await AuthService.get_user_by_token(
+            token=token,
+            expected_type="reset",
+            user_repo=user_repo,
+            session=session,
         )
