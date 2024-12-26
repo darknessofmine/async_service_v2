@@ -61,14 +61,16 @@ async def change_password(
     return {"message": "Password successfully changed!"}
 
 
-@router.post("/forgot-password", status_code=status.HTTP_201_CREATED)
+@router.post("/forgot-password", status_code=status.HTTP_200_OK)
 async def forgot_password(
     auth_service: Annotated[AuthService, Depends(AuthService)],
-):
-    ...
+    username: str,
+) -> dict[str, str]:
+    await auth_service.get_reset_token_for_user(username)
+    return {"message": "Your reset token has been sent to you by email."}
 
 
-@router.post("/")
+@router.post("/reset-password")
 async def reset_password():
     ...
 

@@ -81,6 +81,15 @@ def create_refresh_token(user: "User") -> str:
     )
 
 
+def create_reset_token(username: str) -> str:
+    token_data = {"sub": username}
+    return create_jwt_token(
+        token_data=token_data,
+        token_type="reset",
+        expire_minutes=settings.auth.jwt.reset_password_expire_minutes
+    )
+
+
 def get_token_payload(token: str) -> dict[str, Any]:
     try:
         return jwt_decode(token)

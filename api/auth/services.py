@@ -11,6 +11,7 @@ from api.users import schemas as user_schemas
 from api.users.repositories import UserRepo
 from core.database import db
 from core.settings import settings
+from notifications import mail
 
 
 if TYPE_CHECKING:
@@ -74,7 +75,7 @@ class AuthService:
         Create and return `dict` with access and refresh tokens
         for validated user. If refresh token already exists, return it instead.
 
-        Refresh is stored in database.
+        Refresh token is stored in database.
         """
         validated_user = await self.validate_auth_user(user)
         tokens = {
@@ -121,6 +122,25 @@ class AuthService:
             filters={"user_id": user.id},
             session=self.session,
         )
+
+    async def get_reset_token_for_user(self, username: str) -> None:
+        """
+        Get user by provided username.
+        Generate and send reset_token to user's email.
+
+        Raise `http_400_bad_request` if user with such username doesn't exist.
+        """
+        user = await self.user_repo.get_one(
+            filters={"username": username},
+            session=self.session,
+        )
+        if user is None:
+            return HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User with such username doesn't exist.",
+            )
+        reset_token = token_utils.create_reset_token(username)
+        mail.send_reset_token(user.email, reset_token)
 
     async def delete_refresh_token(self, user: "User") -> None:
         """Delete user's refresh token."""
