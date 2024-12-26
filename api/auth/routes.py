@@ -42,7 +42,7 @@ async def logout(
     auth_service: Annotated[AuthService, Depends(AuthService)],
     current_user: Annotated[User, Depends(AuthService.get_current_user)],
 ) -> dict[str, str]:
-    await auth_service.delete_access_token(current_user)
+    await auth_service.delete_refresh_token(current_user)
     return {"message": "You've successfully logged out."}
 
 

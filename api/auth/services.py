@@ -122,7 +122,7 @@ class AuthService:
             session=self.session,
         )
 
-    async def delete_access_token(self, user: "User") -> None:
+    async def delete_refresh_token(self, user: "User") -> None:
         """Delete user's refresh token."""
         await self.token_repo.delete(
             filters={"user_id": user.id},
@@ -148,6 +148,12 @@ class AuthService:
         only `authenticated` users will be allowed to use it.
         """
         validated_token = token_utils.get_token_payload(token)
+        token_type = validated_token.get("token_type")
+        if token_type != "access":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid token type: {token_type}! Expected: access."
+            )
         return await user_repo.get_one(
             filters={"username": validated_token.get("sub")},
             session=session
