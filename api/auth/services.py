@@ -123,7 +123,7 @@ class AuthService:
             session=self.session,
         )
 
-    async def get_reset_token_for_user(self, username: str) -> None:
+    async def get_and_send_reset_token_for_user(self, username: str) -> None:
         """
         Get user by provided username.
         Generate and send reset_token to user's email.
@@ -140,7 +140,7 @@ class AuthService:
                 detail="User with such username doesn't exist.",
             )
         reset_token = token_utils.create_reset_token(username)
-        mail.send_reset_token(user.email, reset_token)
+        await mail.send_reset_token(user.email, reset_token)
 
     async def delete_refresh_token(self, user: "User") -> None:
         """Delete user's refresh token."""

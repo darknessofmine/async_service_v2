@@ -66,7 +66,7 @@ async def forgot_password(
     auth_service: Annotated[AuthService, Depends(AuthService)],
     username: str,
 ) -> dict[str, str]:
-    await auth_service.get_reset_token_for_user(username)
+    await auth_service.get_and_send_reset_token_for_user(username)
     return {"message": "Your reset token has been sent to you by email."}
 
 
