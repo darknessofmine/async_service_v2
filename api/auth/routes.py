@@ -3,7 +3,12 @@ from typing import Annotated
 from fastapi import APIRouter, Form, Depends, status
 
 from .services import AuthService
-from api.users.schemas import UserCreate, UserLogin, UserResponse
+from api.users.schemas import (
+    UserCreate,
+    UserLogin,
+    UserResponse,
+    UserPasswordReset,
+)
 from api.auth.access_token.schemas import TokenInfo
 from core.settings import settings
 from core.models import User
@@ -58,7 +63,7 @@ async def change_password(
         new_password=new_password,
         old_password=old_password,
     )
-    return {"message": "Password successfully changed!"}
+    return {"message": "Password has been changed!"}
 
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
@@ -71,8 +76,13 @@ async def forgot_password(
 
 
 @router.post("/reset-password")
-async def reset_password():
-    ...
+async def reset_password(
+    auth_service: Annotated[AuthService, Depends(AuthService)],
+    reset_user: Annotated[User, Depends(AuthService.get_user_by_reset_token)],
+    new_password: UserPasswordReset = Form(),
+) -> dict[str, str]:
+    await auth_service.reset_user_password(reset_user, new_password)
+    return {"message": "Password has been changed!"}
 
 
 @router.get("/me",

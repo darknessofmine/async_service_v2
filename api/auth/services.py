@@ -52,8 +52,9 @@ class AuthService:
     async def validate_auth_user(self,
                                  user: user_schemas.UserLogin) -> "User":
         """
-        Get user by username and password (with token),
-        raise `http_401_unauthorized` exception if user does't exist.
+        Get user by username and password (with token).
+
+        Raise `http_401_unauthorized` exception if user does't exist.
         """
         user_dict = auth_utils.user_dict_hash_password(user.model_dump())
         validated_user = await self.user_repo.get_one_with_token(
@@ -74,8 +75,9 @@ class AuthService:
         """
         Create and return `dict` with access and refresh tokens
         for validated user. If refresh token already exists, return it instead.
-
         Refresh token is stored in database.
+
+        Raise `http_401_unauthorized` exception if user does't exist.
         """
         validated_user = await self.validate_auth_user(user)
         tokens = {
@@ -99,7 +101,7 @@ class AuthService:
         old_password: str | None = None,
     ) -> None:
         """
-        Set a new password (hashed) for a user.
+        Set a new hashed password for a user.
 
         Raise `http_400_bad_request` exception if old_password is provided
         and is different from the current one, or if new_password is the same
@@ -119,7 +121,7 @@ class AuthService:
         new_password_hashed = auth_utils.hash_password(new_password)
         await self.user_repo.update(
             update_dict={"password": new_password_hashed},
-            filters={"user_id": user.id},
+            filters={"username": user.username},
             session=self.session,
         )
 
@@ -141,6 +143,25 @@ class AuthService:
             )
         reset_token = token_utils.create_reset_token(username)
         await mail.send_reset_token(user.email, reset_token)
+
+    async def reset_user_password(
+        self,
+        user: "User",
+        passwords: user_schemas.UserPasswordReset,
+    ) -> "User":
+        """
+        Set new hashed password for a user.
+
+        RRaise `http_400_bad_request` exception if password and
+        password repead are different from each other,
+        or if new_password is the same as the current one.
+        """
+        if passwords.new_password != passwords.new_password_repeat:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Passwords are not the same."
+            )
+        await self.change_user_password(user, passwords.new_password)
 
     async def delete_refresh_token(self, user: "User") -> None:
         """Delete user's refresh token."""

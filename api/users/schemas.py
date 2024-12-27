@@ -19,3 +19,8 @@ class UserResponse(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+
+
+class UserPasswordReset(BaseModel):
+    new_password: str
+    new_password_repeat: str
