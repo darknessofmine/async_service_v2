@@ -35,8 +35,8 @@ async def send_reset_token(user_email: str, reset_token: str) -> None:
     await mail.send_message(message)
 
 
-async def send_email_verification(user_email: str,
-                                  verification_url: str) -> None:
+async def send_verification_url(user_email: str,
+                                verification_url: str) -> None:
     body = (
         "To verify your email address please follow the link below: \n\n"
         f"{verification_url}"

@@ -17,3 +17,7 @@ def user_dict_hash_password(user_dict: dict[str, Any]) -> dict[str, Any]:
 
 def is_password_same(current: str, provided: str) -> bool:
     return current == hash_password(provided)
+
+
+def get_verification_url(token: str) -> str:
+    return f"{settings.app.domain}/auth/verification/{token}"

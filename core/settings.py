@@ -91,7 +91,7 @@ class AppSettings(BaseModel):
 
     @property
     def domain(self) -> str:
-        return f"{self.port}:{self.host}"
+        return f"{self.host}:{self.port}"
 
 
 class Settings(BaseSettings):

@@ -85,6 +85,27 @@ async def reset_password(
     return {"message": "Password has been changed!"}
 
 
+@router.post("/verificaion", status_code=status.HTTP_200_OK)
+async def send_verification_email(
+    auth_service: Annotated[AuthService, Depends(AuthService)],
+    current_user: Annotated["User", Depends(AuthService.get_current_user)],
+) -> dict[str, str]:
+    await auth_service.get_and_send_verification_token(current_user)
+    return {
+        "message": ("Verification message have been sent to you!"
+                    "Please check your email.")
+    }
+
+
+@router.get("/verification/{token}", status_code=status.HTTP_200_OK)
+async def verify_user(
+    auth_service: Annotated[AuthService, Depends(AuthService)],
+    token: str,
+) -> dict[str, str]:
+    await auth_service.verify_user_by_token(token)
+    return {"message": "Your account has been verified!"}
+
+
 @router.get("/me",
             response_model=UserResponse,
             status_code=status.HTTP_200_OK)

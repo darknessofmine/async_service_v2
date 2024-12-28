@@ -88,6 +88,28 @@ class AuthService:
             )
         return tokens
 
+    async def get_and_send_verification_token(self, user: "User") -> None:
+        """
+        Generate verification token for a user and send it to user's email.
+        """
+        token = token_utils.create_verification_token(user.username)
+        verification_url = auth_utils.get_verification_url(token=token)
+        await mail.send_verification_url(user.email, verification_url)
+
+    async def verify_user_by_token(self, token: str) -> None:
+        """
+        Verify user by verification token.
+        """
+        user = await AuthService.get_user_by_token(
+            token=token,
+            expected_type="verification",
+            user_repo=self.user_repo,
+        )
+        await self.user_repo.update(
+            update_dict={"is_verified": True},
+            filters={"username": user.username}
+        )
+
     async def change_user_password(
         self,
         user: "User",
