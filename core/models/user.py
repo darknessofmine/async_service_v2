@@ -23,5 +23,6 @@ class User(Base, IntIdPkMixin):
     email: Mapped[str] = mapped_column(String(256), unique=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
 
     token: Mapped[Optional["AccessToken"]] = relationship()
