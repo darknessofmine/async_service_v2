@@ -1,17 +1,8 @@
+
 from asgiref.sync import async_to_sync
-from celery import Celery
 
 from .notifications import mail
-from core.settings import settings
-
-
-celery_app = Celery()
-
-celery_app.conf.update(
-    broker_url=settings.redis.url,
-    result_backend=settings.redis.url,
-    broker_connection_retry_on_startup=True,
-)
+from .celery import celery_app
 
 
 @celery_app.task()

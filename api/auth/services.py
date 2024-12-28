@@ -9,7 +9,7 @@ from .access_token.repositories import AccessTokenRepo
 from api.users import schemas as user_schemas
 from api.users.repositories import UserRepo
 from core.settings import settings
-from notifications import mail
+from background_tasks import tasks
 
 
 if TYPE_CHECKING:
@@ -92,15 +92,15 @@ class AuthService:
 
     async def get_and_send_verification_token(self, user: "User") -> None:
         """
-        Generate verification token for a user and send it to user's email.
+        Generate `verification_token` for a user and send it to user's email.
         """
         token = token_utils.create_verification_token(user.username)
         verification_url = auth_utils.get_verification_url(token=token)
-        await mail.send_verification_url(user.email, verification_url)
+        tasks.send_verification_url.delay(user.email, verification_url)
 
     async def verify_user_by_token(self, token: str) -> None:
         """
-        Verify user by verification token.
+        Verify user by `verification_token`.
         """
         user = await AuthService.get_user_by_token(
             token=token,
@@ -158,7 +158,7 @@ class AuthService:
                 detail="User with such username doesn't exist.",
             )
         reset_token = token_utils.create_reset_token(username)
-        await mail.send_reset_token(user.email, reset_token)
+        tasks.send_reset_token.delay(user.email, reset_token)
 
     async def reset_user_password(
         self,
