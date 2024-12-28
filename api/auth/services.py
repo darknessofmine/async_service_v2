@@ -2,14 +2,12 @@ from typing import Annotated, TYPE_CHECKING
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import utils as auth_utils
 from .access_token import utils as token_utils
 from .access_token.repositories import AccessTokenRepo
 from api.users import schemas as user_schemas
 from api.users.repositories import UserRepo
-from core.database import db
 from core.settings import settings
 from notifications import mail
 
@@ -23,11 +21,9 @@ class AuthService:
         self,
         user_repo: Annotated[UserRepo, Depends(UserRepo)],
         token_repo: Annotated[AccessTokenRepo, Depends(AccessTokenRepo)],
-        session: Annotated[AsyncSession, Depends(db.get_async_session)],
     ) -> None:
         self.user_repo: UserRepo = user_repo
         self.token_repo: AccessTokenRepo = token_repo
-        self.session: AsyncSession = session
 
     async def create_user(self,
                           user: user_schemas.UserCreate) -> "User":
@@ -39,7 +35,7 @@ class AuthService:
         """
         try:
             user_dict = auth_utils.user_dict_hash_password(user.model_dump())
-            return await self.user_repo.create(user_dict, self.session)
+            return await self.user_repo.create(user_dict)
 
         except IntegrityError as error:
             orig_detail = error.__dict__["orig"]
@@ -59,7 +55,6 @@ class AuthService:
         user_dict = auth_utils.user_dict_hash_password(user.model_dump())
         validated_user = await self.user_repo.get_one_with_token(
             filters=user_dict,
-            session=self.session,
         )
         if validated_user is None:
             raise HTTPException(
@@ -90,7 +85,6 @@ class AuthService:
                     "token": tokens["refresh_token"],
                     "user_id": validated_user.id,
                 },
-                session=self.session,
             )
         return tokens
 
@@ -122,19 +116,17 @@ class AuthService:
         await self.user_repo.update(
             update_dict={"password": new_password_hashed},
             filters={"username": user.username},
-            session=self.session,
         )
 
     async def get_and_send_reset_token_for_user(self, username: str) -> None:
         """
         Get user by provided username.
-        Generate and send reset_token to user's email.
+        Generate and send reset_token to user by email.
 
         Raise `http_400_bad_request` if user with such username doesn't exist.
         """
         user = await self.user_repo.get_one(
             filters={"username": username},
-            session=self.session,
         )
         if user is None:
             return HTTPException(
@@ -152,7 +144,7 @@ class AuthService:
         """
         Set new hashed password for a user.
 
-        RRaise `http_400_bad_request` exception if password and
+        Raise `http_400_bad_request` exception if password and
         password repead are different from each other,
         or if new_password is the same as the current one.
         """
@@ -164,10 +156,11 @@ class AuthService:
         await self.change_user_password(user, passwords.new_password)
 
     async def delete_refresh_token(self, user: "User") -> None:
-        """Delete user's refresh token."""
+        """
+        Delete user's refresh token.
+        """
         await self.token_repo.delete(
             filters={"user_id": user.id},
-            session=self.session,
         )
 
     @staticmethod
@@ -175,7 +168,6 @@ class AuthService:
         token: str,
         expected_type: str,
         user_repo: UserRepo,
-        session: AsyncSession,
     ) -> "User":
         """
         ** Static method **
@@ -194,14 +186,12 @@ class AuthService:
             )
         return await user_repo.get_one(
             filters={"username": validated_token.get("sub")},
-            session=session
         )
 
     @staticmethod
     async def get_current_user(
         token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
         user_repo: Annotated[UserRepo, Depends(UserRepo)],
-        session: Annotated[AsyncSession, Depends(db.get_async_session)],
     ) -> "User":
         """
         ** Static method **
@@ -217,14 +207,12 @@ class AuthService:
             token=token,
             expected_type="access",
             user_repo=user_repo,
-            session=session,
         )
 
     @staticmethod
     async def get_user_by_reset_token(
         token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
         user_repo: Annotated[UserRepo, Depends(UserRepo)],
-        session: Annotated[AsyncSession, Depends(db.get_async_session)],
     ) -> "User":
         """
         ** Static method **
@@ -241,5 +229,4 @@ class AuthService:
             token=token,
             expected_type="reset",
             user_repo=user_repo,
-            session=session,
         )

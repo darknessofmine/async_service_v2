@@ -1,59 +1,66 @@
-from typing import Any
+from typing import Annotated, Any
 
+from fastapi import Depends
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.database import db
 
-class CreateRepo[T]:
+
+class BaseRepo:
+    def __init__(
+        self,
+        session: Annotated[AsyncSession, Depends(db.get_async_session)],
+    ) -> None:
+        self.session = session
+
+
+class CreateRepo[T](BaseRepo):
     model: T = None
 
     async def create(self,
-                     data_dict: dict[str, Any],
-                     session: AsyncSession) -> T:
+                     data_dict: dict[str, Any]) -> T:
         new_obj = self.model(**data_dict)
-        session.add(new_obj)
-        await session.commit()
+        self.session.add(new_obj)
+        await self.session.commit()
         return new_obj
 
 
-class GetOneRepo[T]:
+class GetOneRepo[T](BaseRepo):
     model: T = None
 
     async def get_one(self,
-                      filters: dict[str, Any],
-                      session: AsyncSession) -> T | None:
+                      filters: dict[str, Any]) -> T | None:
         stmt = select(self.model)
         for key, value in filters.items():
             if hasattr(self.model, key):
                 stmt = stmt.filter(getattr(self.model, key) == value)
-        return await session.scalar(stmt)
+        return await self.session.scalar(stmt)
 
 
-class UpdateRepo[T]:
+class UpdateRepo[T](BaseRepo):
     model: T = None
 
     async def update(self,
                      update_dict: dict[str, Any],
-                     filters: dict[str, Any],
-                     session: AsyncSession) -> T:
+                     filters: dict[str, Any]) -> T:
         stmt = update(self.model).values(update_dict)
         for key, value in filters.items():
             if hasattr(self.model, key):
                 stmt = stmt.filter(getattr(self.model, key) == value)
-        updated = await session.execute(stmt)
-        await session.commit()
+        updated = await self.session.execute(stmt)
+        await self.session.commit()
         return updated
 
 
-class DeleteRepo[T]:
+class DeleteRepo[T](BaseRepo):
     model: T = None
 
     async def delete(self,
-                     filters: dict[str, Any],
-                     session: AsyncSession) -> None:
+                     filters: dict[str, Any]) -> None:
         stmt = delete(self.model)
         for key, value in filters.items():
             if hasattr(self.model, key):
                 stmt = stmt.filter(getattr(self.model, key) == value)
-        await session.execute(stmt)
-        await session.commit()
+        await self.session.execute(stmt)
+        await self.session.commit()
