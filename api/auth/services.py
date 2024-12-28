@@ -31,7 +31,7 @@ class AuthService:
         Crete new user.
 
         Raise `http_400_bad_request` exception if user with provided
-        `useername` or `email` already exists.
+        `username` or `email` already exists.
         """
         try:
             user_dict = auth_utils.user_dict_hash_password(user.model_dump())
@@ -52,16 +52,18 @@ class AuthService:
 
         Raise `http_401_unauthorized` exception if user does't exist.
         """
-        user_dict = auth_utils.user_dict_hash_password(user.model_dump())
-        validated_user = await self.user_repo.get_one_with_token(
-            filters=user_dict,
+        valid_user = await self.user_repo.get_one_with_token(
+            filters={"username": user.username},
         )
-        if validated_user is None:
+        if not (
+            valid_user is not None
+            and auth_utils.is_password_same(valid_user.password, user.password)
+        ):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password!",
             )
-        return validated_user
+        return valid_user
 
     async def get_access_and_refresh_tokens_for_user(
         self,
