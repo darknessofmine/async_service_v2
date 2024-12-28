@@ -25,11 +25,25 @@ async def send_reset_token(user_email: str, reset_token: str) -> None:
         f"This is your reset token:\n\n{reset_token}\n\n"
         "Please use it while accessing the following "
         "link to reset your password.\n\n"
-        f"{settings.app.host}:{settings.app.port}/auth/reset-password"
+        f"{settings.app.domain}/auth/reset-password"
     )
     message = create_message(
         recepients=[user_email],
-        subject="Async_service_v2 Password Reset.",
+        subject="Async_service_v2: Password Reset.",
+        body=body,
+    )
+    await mail.send_message(message)
+
+
+async def send_email_verification(user_email: str,
+                                  verification_url: str) -> None:
+    body = (
+        "To verify your email address please follow the link below: \n\n"
+        f"{verification_url}"
+    )
+    message = create_message(
+        recepients=[user_email],
+        subject="Async_service_v2: Email verificatoin.",
         body=body,
     )
     await mail.send_message(message)

@@ -64,6 +64,7 @@ class JWTSettings(BaseModel):
     refresh_token_expire_days: int = 30
 
     reset_password_expire_minutes: int = 10
+    verification_expire_minutes: int = 10
 
 
 class AuthSettings(BaseSettings):
@@ -87,6 +88,10 @@ class AppSettings(BaseModel):
     host: str = "127.0.0.1"
     port: int = 8000
     reload: bool = True
+
+    @property
+    def domain(self) -> str:
+        return f"{self.port}:{self.host}"
 
 
 class Settings(BaseSettings):
