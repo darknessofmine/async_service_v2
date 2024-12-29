@@ -14,6 +14,7 @@ class UserCreate(BaseModel):
 class UserResponse(BaseModel):
     username: str
     email: str
+    is_verified: bool
 
 
 class UserLogin(BaseModel):
