@@ -1,6 +1,5 @@
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import UniqueConstraint
 
 from .base import Base
 from .mixins import IntIdPkMixin
