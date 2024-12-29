@@ -20,7 +20,7 @@ class Profile(Base, IntIdPkMixin):
         ),
     )
 
-    fist_name: Mapped[str] = mapped_column(String(32))
+    first_name: Mapped[str] = mapped_column(String(32))
     last_name: Mapped[str] = mapped_column(String(32), nullable=True)
     bio: Mapped[str] = mapped_column(String(500), nullable=True)
     image_url: Mapped[str] = mapped_column(String, nullable=True)
