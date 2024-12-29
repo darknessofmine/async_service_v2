@@ -99,7 +99,7 @@ class Settings(BaseSettings):
     auth: AuthSettings = AuthSettings()
     db: DatabaseSettings = DatabaseSettings()
     redis: RedisSettings = RedisSettings()
-    mail: FastMailSettings = FastMailSettings()
+    email: FastMailSettings = FastMailSettings()
 
 
 settings = Settings()

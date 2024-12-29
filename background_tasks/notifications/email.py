@@ -6,7 +6,7 @@ from core.settings import settings
 
 class EmailService(FastMail):
     def __init__(self) -> None:
-        self.config = ConnectionConfig(**settings.mail.model_dump())
+        self.config = ConnectionConfig(**settings.email.model_dump())
 
     @async_to_sync
     async def send_message(
