@@ -10,3 +10,4 @@ celery_app.conf.update(
     result_backend=settings.redis.url,
     broker_connection_retry_on_startup=True,
 )
+celery_app.autodiscover_tasks()

@@ -92,8 +92,10 @@ async def send_verification_email(
 ) -> dict[str, str]:
     await auth_service.get_and_send_verification_token(current_user)
     return {
-        "message": ("Verification message have been sent to you!"
-                    "Please check your email.")
+        "message": (
+            "Verification message has been sent to you!"
+            "Please check your email."
+        )
     }
 
 
