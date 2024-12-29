@@ -11,6 +11,7 @@ from api.users.schemas import (
 )
 from api.auth.access_token.schemas import TokenInfo
 from api.profiles.services import ProfileService
+from background_tasks import tasks
 from core.settings import settings
 from core.models import User
 
@@ -75,7 +76,9 @@ async def forgot_password(
     auth_service: Annotated[AuthService, Depends(AuthService)],
     username: str,
 ) -> dict[str, str]:
-    await auth_service.get_and_send_reset_token_for_user(username)
+    user = await auth_service.get_user_by_username(username)
+    reset_token = auth_service.get_reset_token_for_user(user)
+    tasks.send_reset_token.delay(user.email, reset_token)
     return {"message": "Your reset token has been sent to you by email."}
 
 
@@ -94,7 +97,8 @@ async def send_verification_email(
     auth_service: Annotated[AuthService, Depends(AuthService)],
     current_user: Annotated["User", Depends(AuthService.get_current_user)],
 ) -> dict[str, str]:
-    await auth_service.get_and_send_verification_token(current_user)
+    url = auth_service.create_verification_url(current_user)
+    tasks.send_verification_url.delay(current_user.email, url)
     return {
         "message": (
             "Verification message has been sent to you!"

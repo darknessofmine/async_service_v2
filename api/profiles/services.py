@@ -18,6 +18,9 @@ class ProfileService:
         self.profile_repo = profile_repo
 
     async def create_user_profile(self, user: "User") -> None:
+        """
+        Create profile for a user.
+        """
         profile_dict = {
             "first_name": user.username,
             "user_id": user.id,

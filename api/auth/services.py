@@ -9,7 +9,6 @@ from .access_token.repositories import AccessTokenRepo
 from api.users import schemas as user_schemas
 from api.users.repositories import UserRepo
 from core.settings import settings
-from background_tasks import tasks
 
 
 if TYPE_CHECKING:
@@ -90,13 +89,12 @@ class AuthService:
             )
         return tokens
 
-    async def get_and_send_verification_token(self, user: "User") -> None:
+    def create_verification_url(self, user: "User") -> str:
         """
-        Generate `verification_token` for a user and send it to user's email.
+        Generate `verification_token` for a user.
         """
         token = token_utils.create_verification_token(user.username)
-        verification_url = auth_utils.get_verification_url(token=token)
-        tasks.send_verification_url.delay(user.email, verification_url)
+        return auth_utils.get_verification_url(token=token)
 
     async def verify_user_by_token(self, token: str) -> None:
         """
@@ -142,10 +140,9 @@ class AuthService:
             filters={"username": user.username},
         )
 
-    async def get_and_send_reset_token_for_user(self, username: str) -> None:
+    async def get_user_by_username(self, username: str) -> "User":
         """
         Get user by provided username.
-        Generate and send reset_token to user by email.
 
         Raise `http_400_bad_request` if user with such username doesn't exist.
         """
@@ -157,8 +154,13 @@ class AuthService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User with such username doesn't exist.",
             )
-        reset_token = token_utils.create_reset_token(username)
-        tasks.send_reset_token.delay(user.email, reset_token)
+        return user
+
+    def get_reset_token_for_user(slef, user: "User") -> str:
+        """
+        Generate reset_token for a user.
+        """
+        return token_utils.create_reset_token(user.username)
 
     async def reset_user_password(
         self,
