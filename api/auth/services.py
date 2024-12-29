@@ -208,7 +208,7 @@ class AuthService:
                 detail=(f"Invalid token type: {token_type}! "
                         f"Expected: {expected_type}.")
             )
-        return await user_repo.get_one(
+        return await user_repo.get_one_with_profile(
             filters={"username": validated_token.get("sub")},
         )
 

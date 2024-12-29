@@ -27,3 +27,13 @@ class UserRepo(CreateRepo[User],
             if hasattr(self.model, key):
                 stmt = stmt.filter(getattr(self.model, key) == value)
         return await self.session.scalar(stmt)
+
+    async def get_one_with_profile(
+        self,
+        filters: dict[str, Any],
+    ) -> User | None:
+        stmt = select(self.model).options(joinedload(self.model.profile))
+        for key, value in filters.items():
+            if hasattr(self.model, key):
+                stmt = stmt.filter(getattr(self.model, key) == value)
+        return await self.session.scalar(stmt)

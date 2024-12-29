@@ -17,12 +17,12 @@ class ProfileService:
     ) -> None:
         self.profile_repo = profile_repo
 
-    async def create_user_profile(self, user: "User") -> "Profile":
+    async def create_user_profile(self, user: "User") -> None:
         profile_dict = {
             "first_name": user.username,
             "user_id": user.id,
         }
-        return await self.profile_repo.create(profile_dict)
+        await self.profile_repo.create(profile_dict)
 
     async def update_user_profile(
         self,

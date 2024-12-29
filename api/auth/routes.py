@@ -10,6 +10,7 @@ from api.users.schemas import (
     UserPasswordReset,
 )
 from api.auth.access_token.schemas import TokenInfo
+from api.profiles.services import ProfileService
 from core.settings import settings
 from core.models import User
 
@@ -26,9 +27,12 @@ router = APIRouter(
              status_code=status.HTTP_200_OK)
 async def signup(
     auth_service: Annotated[AuthService, Depends(AuthService)],
+    profile_service: Annotated[ProfileService, Depends(ProfileService)],
     user_create: UserCreate,
 ) -> UserResponse:
-    return await auth_service.create_user(user_create)
+    user = await auth_service.create_user(user_create)
+    await profile_service.create_user_profile(user)
+    return user
 
 
 @router.post("/login",
