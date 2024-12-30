@@ -17,8 +17,8 @@ class ProfileService:
         profile_repo: Annotated[ProfileRepo, Depends(ProfileRepo)],
         user_repo: Annotated[UserRepo, Depends(UserRepo)],
     ) -> None:
-        self.profile_repo = profile_repo
-        self.user_repo = user_repo
+        self.profile_repo: ProfileRepo = profile_repo
+        self.user_repo: UserRepo = user_repo
 
     async def create_user_profile(self, user: "User") -> None:
         """

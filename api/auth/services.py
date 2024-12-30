@@ -27,15 +27,14 @@ class AuthService:
     async def create_user(self,
                           user: user_schemas.UserCreate) -> "User":
         """
-        Crete new user.
+        Create new user.
 
         Raise `http_400_bad_request` exception if user with provided
         `username` or `email` already exists.
         """
+        user_dict = auth_utils.user_dict_hash_password(user.model_dump())
         try:
-            user_dict = auth_utils.user_dict_hash_password(user.model_dump())
             return await self.user_repo.create(user_dict)
-
         except IntegrityError as error:
             orig_detail = error.__dict__["orig"]
             error_field = str(orig_detail).split("\"")[3]

@@ -8,7 +8,10 @@ from api.auth.services import AuthService
 from core.models import User
 
 
-router = APIRouter(prefix="/profile", tags=["profile"])
+router = APIRouter(
+    prefix="/profile",
+    tags=["profile"],
+)
 
 
 @router.get("/{username}",
