@@ -12,8 +12,8 @@ from api.users.schemas import (
 from api.auth.access_token.schemas import TokenInfo
 from api.profiles.services import ProfileService
 from background_tasks import tasks
-from core.settings import settings
 from core.models import User
+from core.settings import settings
 
 
 router = APIRouter(

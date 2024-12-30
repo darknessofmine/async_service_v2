@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
 from .repositories import UserRepo
-from .schemas import UserCreate
+from .schemas import UserCreate, UserUpdate
 from api.auth import utils as auth_utils
 
 
@@ -75,10 +75,10 @@ class UserService:
             filters={"username": user.username},
         )
 
-    async def change_username(
+    async def change_username_or_email(
         self,
         user: "User",
-        new_username: str,
+        user_update: UserUpdate,
     ) -> "User":
         """
         Change user's username
@@ -87,11 +87,14 @@ class UserService:
         Raise `http_400_bad_request` exception if profided
         `username` already exists.
         """
-        if user.username == new_username:
+        if (
+            user.username == user_update.username
+            or user.email == user_update.email
+        ):
             return user
         try:
             return await self.user_repo.update(
-                update_dict={"username": new_username},
+                update_dict=user_update.model_dump,
                 filters={"username": user.username},
             )
         except IntegrityError as error:

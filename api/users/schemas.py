@@ -25,3 +25,8 @@ class UserLogin(BaseModel):
 class UserPasswordReset(BaseModel):
     new_password: str
     new_password_repeat: str
+
+
+class UserUpdate(BaseModel):
+    username: str | None = None
+    email: EmailStr | None = None

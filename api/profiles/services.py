@@ -75,8 +75,10 @@ class ProfileService:
         new_username: str,
     ) -> None:
         """
-        Change user's profile `first_name`
-        if user doesn't have custom profile name.
+        Change user's profile `first_name` to `user.username`
+
+        Do nothing if current username is the same as the new_username,
+        or if user already has custom profile name.
         """
         if user.profile.first_name == user.username != new_username:
             await self.profile_repo.update(
