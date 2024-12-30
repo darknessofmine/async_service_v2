@@ -68,3 +68,21 @@ class ProfileService:
                 detail="Only authors are allowed to have profile."
             )
         return user.profile
+
+    async def change_profile_first_name_on_username_change(
+        self,
+        user: "User",
+        new_username: str,
+    ) -> None:
+        """
+        Change user's profile `first_name`
+        if user doesn't have custom profile name.
+        """
+        if user.profile.first_name == user.username != new_username:
+            await self.profile_repo.update(
+                update_dict={
+                    "first_name": new_username,
+                    "last_name": None,
+                },
+                filters={"user_id": user.id},
+            )

@@ -19,8 +19,10 @@ class UserService:
     ) -> None:
         self.user_repo: UserRepo = user_repo
 
-    async def create_superuser(self,
-                               user: UserCreate) -> "User":
+    async def create_superuser(
+        self,
+        user: UserCreate
+    ) -> "User":
         """
         Create new superuser.
 
@@ -44,3 +46,64 @@ class UserService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"User with {error_field} already exists!",
             )
+
+    async def change_author_status(
+        self,
+        user: "User",
+        author_status: bool,
+    ) -> "User":
+        """
+        Change change user's attribute `is_author`,
+        depending on `author_status: bool` parameter.
+        """
+        return await self.user_repo.update(
+            update_dict={"is_author": author_status},
+            filters={"username": user.username},
+        )
+
+    async def change_admin_status(
+        self,
+        user: "User",
+        admin_status: bool,
+    ) -> "User":
+        """
+        Change change user's attribute `is_admin`,
+        depending on `admin_status: bool` parameter.
+        """
+        return await self.user_repo.update(
+            update_dict={"is_admin": admin_status},
+            filters={"username": user.username},
+        )
+
+    async def change_username(
+        self,
+        user: "User",
+        new_username: str,
+    ) -> "User":
+        """
+        Change user's username
+        if `new_username` is the same as the ole one.
+
+        Raise `http_400_bad_request` exception if profided
+        `username` already exists.
+        """
+        if user.username == new_username:
+            return user
+        try:
+            return await self.user_repo.update(
+                update_dict={"username": new_username},
+                filters={"username": user.username},
+            )
+        except IntegrityError as error:
+            orig_detail = error.__dict__["orig"]
+            error_field = str(orig_detail).split("\"")[3]
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"User with {error_field} already exists!",
+            )
+
+    async def delete_user(self, user: "User") -> None:
+        """
+        Delete user.
+        """
+        await self.user_repo.delete({"username": user.username})
