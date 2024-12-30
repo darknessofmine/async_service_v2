@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class ProfileResponse(BaseModel):
-    first_name: str | None = None
+    first_name: str
     last_name: str | None = None
     bio: str | None = None
 
