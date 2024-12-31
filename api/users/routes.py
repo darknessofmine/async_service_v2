@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Form, status
 
 from .services import UserService
+from api.auth.permissions import Permissions
 from api.auth.services import AuthService
 from api.profiles.services import ProfileService
 from api.users.schemas import UserCreate, UserResponse, UserUpdate
@@ -48,6 +49,7 @@ async def delete_user(
              status_code=status.HTTP_201_CREATED)
 async def create_superuser(
     user_service: Annotated[UserService, Depends(UserService)],
+    current_user: Annotated[bool, Depends(Permissions(["is_admin"]))],
     superuser: UserCreate,
 ) -> UserResponse:
     return await user_service.create_superuser(user=superuser)

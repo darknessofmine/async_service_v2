@@ -53,6 +53,11 @@ class UserService:
         Change change user's attribute `is_author`,
         depending on `author_status: bool` parameter.
         """
+        if not user.is_verified:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User has to be verified."
+            )
         return await self.user_repo.update(
             update_dict={"is_author": author_status},
             filters={"username": user.username},
