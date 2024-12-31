@@ -44,12 +44,13 @@ async def delete_user(
     await user_service.delete_user(current_suer)
 
 
-@router.post("/create-superuser",
-             response_model=UserResponse,
-             status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/create-superuser",
+    response_model=UserResponse,
+    dependencies=[Depends(Permissions(["is_admin"]))],
+    status_code=status.HTTP_201_CREATED)
 async def create_superuser(
     user_service: Annotated[UserService, Depends(UserService)],
-    current_user: Annotated[bool, Depends(Permissions(["is_admin"]))],
     superuser: UserCreate,
 ) -> UserResponse:
     return await user_service.create_superuser(user=superuser)

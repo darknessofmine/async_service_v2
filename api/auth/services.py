@@ -48,7 +48,7 @@ class AuthService:
         """
         Get user by username and password (with token).
 
-        Raise `http_401_unauthorized` exception if user does't exist.
+        Raise `http_401_unauthorized` exception if user doesn't exist.
         """
         valid_user = await self.user_repo.get_one_with_token(
             filters={"username": user.username},
@@ -72,7 +72,7 @@ class AuthService:
         for validated user. If refresh token already exists, return it instead.
         Refresh token is stored in database.
 
-        Raise `http_401_unauthorized` exception if user does't exist.
+        Raise `http_401_unauthorized` exception if user doesn't exist.
         """
         validated_user = await self.validate_auth_user(user)
         tokens = {
@@ -88,7 +88,8 @@ class AuthService:
             )
         return tokens
 
-    def create_verification_url(self, user: "User") -> str:
+    @staticmethod
+    def create_verification_url(user: "User") -> str:
         """
         Generate `verification_token` for a user.
         """
@@ -149,13 +150,14 @@ class AuthService:
             filters={"username": username},
         )
         if user is None:
-            return HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User with such username doesn't exist.",
             )
         return user
 
-    def get_reset_token_for_user(slef, user: "User") -> str:
+    @staticmethod
+    def get_reset_token_for_user(user: "User") -> str:
         """
         Generate reset_token for a user.
         """
@@ -165,7 +167,7 @@ class AuthService:
         self,
         user: "User",
         passwords: user_schemas.UserPasswordReset,
-    ) -> "User":
+    ) -> None:
         """
         Set new hashed password for a user.
 
