@@ -62,20 +62,21 @@ class ProfileService:
         user = await self.user_repo.get_one_with_profile(
             filters={"username": username},
         )
-        if not user.is_author:
+        if user is None or not user.is_author:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Only authors are allowed to have profile."
+                detail=("Only verified users with `author` status "
+                        "are allowed to have profile.")
             )
         return user.profile
 
-    async def change_profile_first_name_on_username_change(
+    async def change_profile_name_on_username_change(
         self,
         user: "User",
         new_username: str,
     ) -> None:
         """
-        Change user's profile `first_name` to `user.username`
+        Change user's `profile.first_name` to `user.username`
 
         Do nothing if current username is the same as the new_username,
         or if user already has custom profile name.

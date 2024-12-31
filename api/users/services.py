@@ -19,10 +19,7 @@ class UserService:
     ) -> None:
         self.user_repo: UserRepo = user_repo
 
-    async def create_superuser(
-        self,
-        user: UserCreate
-    ) -> "User":
+    async def create_superuser(self, user: UserCreate) -> "User":
         """
         Create new superuser.
 
