@@ -1,7 +1,7 @@
 from typing import Annotated, Any
 
 from fastapi import Depends
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, select, Sequence, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import db
@@ -43,14 +43,20 @@ class UpdateRepo[T](BaseRepo):
 
     async def update(self,
                      update_dict: dict[str, Any],
-                     filters: dict[str, Any]) -> T:
+                     filters: dict[str, Any],
+                     return_result: bool = False) -> Sequence[T] | None:
         stmt = update(self.model).values(update_dict)
         for key, value in filters.items():
             if hasattr(self.model, key):
                 stmt = stmt.filter(getattr(self.model, key) == value)
-        updated = await self.session.execute(stmt)
-        await self.session.commit()
-        return updated
+        if return_result:
+            stmt = stmt.returning(self.model)
+            updated = await self.session.scalars(stmt)
+            await self.session.commit()
+            return updated.all()
+        else:
+            await self.session.execute(stmt)
+            await self.session.commit()
 
 
 class DeleteRepo[T](BaseRepo):

@@ -47,10 +47,21 @@ class ProfileService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Only authors are allowed to have profile."
             )
-        return await self.profile_repo.update(
-            update_dict=profile_update.model_dump(),
+        update_dict = dict()
+        for key, value in profile_update.model_dump().items():
+            if profile_update.model_dump()[key] is not None:
+                update_dict[key] = value
+        if not update_dict:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Empty values. Nothing has changed."
+            )
+        updated_profile = await self.profile_repo.update(
+            update_dict=update_dict,
             filters={"user_id": user.id},
+            return_result=True,
         )
+        return updated_profile[0]
 
     async def get_user_profile_by_username(self, username: str) -> "Profile":
         """
@@ -69,23 +80,3 @@ class ProfileService:
                         "are allowed to have profile.")
             )
         return user.profile
-
-    async def change_profile_name_on_username_change(
-        self,
-        user: "User",
-        new_username: str,
-    ) -> None:
-        """
-        Change user's `profile.first_name` to `user.username`
-
-        Do nothing if current username is the same as the new_username,
-        or if user already has custom profile name.
-        """
-        if user.profile.first_name == user.username != new_username:
-            await self.profile_repo.update(
-                update_dict={
-                    "first_name": new_username,
-                    "last_name": None,
-                },
-                filters={"user_id": user.id},
-            )

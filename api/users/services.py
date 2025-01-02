@@ -58,10 +58,12 @@ class UserService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User has to be verified."
             )
-        return await self.user_repo.update(
+        updated_user = await self.user_repo.update(
             update_dict={"is_author": author_status},
             filters={"username": user.username},
+            return_result=True,
         )
+        return updated_user[0]
 
     async def change_admin_status(
         self,
@@ -72,33 +74,36 @@ class UserService:
         Change change user's attribute `is_admin`,
         depending on `admin_status: bool` parameter.
         """
-        return await self.user_repo.update(
+        updated_user = await self.user_repo.update(
             update_dict={"is_admin": admin_status},
             filters={"username": user.username},
+            return_result=True,
         )
+        return updated_user[0]
 
-    async def change_username_or_email(
+    async def change_user_email(
         self,
         user: "User",
         user_update: UserUpdate,
     ) -> "User":
         """
-        Change user's username
-        if `new_username` is the same as the ole one.
+        Change user's email.
 
-        Raise `http_400_bad_request` exception if profided
-        `username` already exists.
+        Raise `http_400_bad_request` exception if provided
+        `email` already exists or is the same as the old one.
         """
-        if (
-            user.username == user_update.username
-            or user.email == user_update.email
-        ):
-            return user
-        try:
-            return await self.user_repo.update(
-                update_dict=user_update.model_dump,
-                filters={"username": user.username},
+        if user.email == user_update.email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You already have this email.",
             )
+        try:
+            updated_user = await self.user_repo.update(
+                update_dict=user_update.model_dump(exclude_unset=True),
+                filters={"username": user.username},
+                return_result=True,
+            )
+            return updated_user[0]
         except IntegrityError as error:
             orig_detail = error.__dict__["orig"]
             error_field = str(orig_detail).split("\"")[3]
@@ -111,4 +116,4 @@ class UserService:
         """
         Delete user.
         """
-        await self.user_repo.delete({"username": user.username})
+        await self.user_repo.delete(filters={"username": user.username})
