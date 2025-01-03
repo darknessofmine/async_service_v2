@@ -1,8 +1,14 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import ForeignKey, String, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
 from .mixins import IntIdPkMixin
+
+
+if TYPE_CHECKING:
+    from core.models import User
 
 
 class SubTier(Base, IntIdPkMixin):
@@ -25,3 +31,5 @@ class SubTier(Base, IntIdPkMixin):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
     )
+
+    user: Mapped["User"] = relationship(back_populates="sub_tiers")
