@@ -58,12 +58,11 @@ class UserService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User has to be verified."
             )
-        updated_user = await self.user_repo.update(
+        return await self.user_repo.update(
             update_dict={"is_author": author_status},
             filters={"username": user.username},
             return_result=True,
         )
-        return updated_user[0]
 
     async def change_admin_status(
         self,
@@ -74,12 +73,11 @@ class UserService:
         Change change user's attribute `is_admin`,
         depending on `admin_status: bool` parameter.
         """
-        updated_user = await self.user_repo.update(
+        return await self.user_repo.update(
             update_dict={"is_admin": admin_status},
             filters={"username": user.username},
             return_result=True,
         )
-        return updated_user[0]
 
     async def change_user_email(
         self,
@@ -98,12 +96,11 @@ class UserService:
                 detail="You already have this email.",
             )
         try:
-            updated_user = await self.user_repo.update(
+            return await self.user_repo.update(
                 update_dict=user_update.model_dump(exclude_unset=True),
                 filters={"username": user.username},
                 return_result=True,
             )
-            return updated_user[0]
         except IntegrityError as error:
             orig_detail = error.__dict__["orig"]
             error_field = str(orig_detail).split("\"")[3]

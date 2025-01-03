@@ -11,3 +11,4 @@ class ProfileUpdate(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     bio: str | None = None
+    image_url: str | None = None

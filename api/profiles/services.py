@@ -56,12 +56,11 @@ class ProfileService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Empty values. Nothing has changed."
             )
-        updated_profile = await self.profile_repo.update(
+        return await self.profile_repo.update(
             update_dict=update_dict,
             filters={"user_id": user.id},
             return_result=True,
         )
-        return updated_profile[0]
 
     async def get_user_profile_by_username(self, username: str) -> "Profile":
         """
