@@ -1,7 +1,7 @@
 from typing import Annotated, Any
 
 from fastapi import Depends
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, select, Sequence, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import db
@@ -36,6 +36,25 @@ class GetOneRepo[T](BaseRepo):
             if hasattr(self.model, key):
                 stmt = stmt.filter(getattr(self.model, key) == value)
         return await self.session.scalar(stmt)
+
+
+class GetManyRepo[T](BaseRepo):
+    model: T = None
+
+    async def get_many(self,
+                       filters: dict[str, Any] | None = None,
+                       limit: int | None = None,
+                       offset: int | None = None) -> Sequence[T] | None:
+        stmt = select(self.model)
+        if filters is not None:
+            for key, value in filters.items():
+                if hasattr(self.model, key):
+                    stmt = stmt.filter(getattr(self.model, key) == value)
+        if limit is not None:
+            stmt = stmt.limit(limit)
+        if offset is not None:
+            stmt = stmt.offset(offset)
+        return await self.session.scalars(stmt)
 
 
 class UpdateRepo[T](BaseRepo):
