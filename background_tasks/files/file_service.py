@@ -21,6 +21,11 @@ class FileService:
             return f"{BASE_DIR}/media/profile/{image.filename}"
 
     @staticmethod
+    def get_sub_tier_image_url(image: UploadFile | str | None) -> str | None:
+        if image:
+            return f"{BASE_DIR}/media/sub_tier/{image.filename}"
+
+    @staticmethod
     async def save_file_async(file_to_save: UploadFile | str | None,
                               file_url: str) -> None:
         if file_to_save:

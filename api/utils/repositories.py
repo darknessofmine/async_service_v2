@@ -8,6 +8,8 @@ from core.database import db
 
 
 class BaseRepo:
+    model = None
+
     def __init__(
         self,
         session: Annotated[AsyncSession, Depends(db.get_async_session)],
@@ -16,8 +18,6 @@ class BaseRepo:
 
 
 class CreateRepo[T](BaseRepo):
-    model: T = None
-
     async def create(self,
                      data_dict: dict[str, Any]) -> T:
         new_obj = self.model(**data_dict)
@@ -27,8 +27,6 @@ class CreateRepo[T](BaseRepo):
 
 
 class GetOneRepo[T](BaseRepo):
-    model: T = None
-
     async def get_one(self,
                       filters: dict[str, Any]) -> T | None:
         stmt = select(self.model)
@@ -39,8 +37,6 @@ class GetOneRepo[T](BaseRepo):
 
 
 class GetManyRepo[T](BaseRepo):
-    model: T = None
-
     async def get_many(self,
                        filters: dict[str, Any] | None = None,
                        limit: int | None = None,
@@ -58,8 +54,6 @@ class GetManyRepo[T](BaseRepo):
 
 
 class UpdateRepo[T](BaseRepo):
-    model: T = None
-
     async def update(self,
                      update_dict: dict[str, Any],
                      filters: dict[str, Any],
@@ -79,8 +73,6 @@ class UpdateRepo[T](BaseRepo):
 
 
 class DeleteRepo[T](BaseRepo):
-    model: T = None
-
     async def delete(self,
                      filters: dict[str, Any]) -> None:
         stmt = delete(self.model)
