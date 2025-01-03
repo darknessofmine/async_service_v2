@@ -43,10 +43,9 @@ async def update_my_profile(
         bio=bio,
         image_url=url,
     )
-    if image:
-        file_service.save_file(image, url)
-        # TODO: Finish backgruond file save.
-        # tasks.save_profile_image.delay(image, url)
+    file_service.save_file(image, url)
+    # TODO: Finish backgruond file save.
+    # tasks.save_profile_image.delay(image, url)
     return await profile_service.update_user_profile(
         user=current_user,
         profile_update=profile_update,
