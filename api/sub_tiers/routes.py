@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, status, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Path, status, UploadFile
 
 from .services import SubTierService
 from .schemas import SubTierCreate, SubTierResponse
@@ -38,7 +38,17 @@ async def create_sub_tier(
     return await sub_tier_service.create_sub_tier(user, sub_tier_create)
 
 
-@router.delete("/subscription/{sub_tier_id}",
+@router.get("/{username}",
+            response_model=list[SubTierResponse],
+            status_code=status.HTTP_200_OK)
+async def get_author_sub_tiers(
+    sub_tier_service: Annotated[SubTierService, Depends(SubTierService)],
+    username: Annotated[str, Path],
+):
+    return await sub_tier_service.get_sub_tiers_by_username(username)
+
+
+@router.delete("/{sub_tier_id}",
                status_code=status.HTTP_204_NO_CONTENT)
 async def delete_sub_tier(
     user: Annotated[User, Depends(IsOwner("sub_tier"))],

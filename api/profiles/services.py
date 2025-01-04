@@ -1,14 +1,11 @@
-from typing import Annotated, TYPE_CHECKING
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 
 from . import schemas
 from .repositories import ProfileRepo
 from api.users.repositories import UserRepo
-
-
-if TYPE_CHECKING:
-    from core.models import Profile, User
+from core.models import Profile, User
 
 
 class ProfileService:

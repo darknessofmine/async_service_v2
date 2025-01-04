@@ -2,19 +2,28 @@ from typing import Annotated, Any
 
 from fastapi import Depends
 from sqlalchemy import delete, select, Sequence, update
+from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import db
+from core.models import Base
 
 
 class BaseRepo:
-    model = None
+    model: Base = None
 
     def __init__(
         self,
         session: Annotated[AsyncSession, Depends(db.get_async_session)],
     ) -> None:
         self.session = session
+
+    def apply_filters(self, stmt: Any, filters: dict[str, Any]) -> Any:
+        if filters:
+            for key, value in filters.items():
+                if hasattr(self.model, key):
+                    stmt = stmt.filter(getattr(self.model, key) == value)
+        return stmt
 
 
 class CreateRepo[T](BaseRepo):
@@ -30,9 +39,7 @@ class GetOneRepo[T](BaseRepo):
     async def get_one(self,
                       filters: dict[str, Any]) -> T | None:
         stmt = select(self.model)
-        for key, value in filters.items():
-            if hasattr(self.model, key):
-                stmt = stmt.filter(getattr(self.model, key) == value)
+        stmt = self.apply_filters(stmt, filters)
         return await self.session.scalar(stmt)
 
 
@@ -42,10 +49,7 @@ class GetManyRepo[T](BaseRepo):
                        limit: int | None = None,
                        offset: int | None = None) -> Sequence[T] | None:
         stmt = select(self.model)
-        if filters is not None:
-            for key, value in filters.items():
-                if hasattr(self.model, key):
-                    stmt = stmt.filter(getattr(self.model, key) == value)
+        stmt = self.apply_filters(stmt, filters)
         if limit is not None:
             stmt = stmt.limit(limit)
         if offset is not None:
@@ -59,9 +63,7 @@ class UpdateRepo[T](BaseRepo):
                      filters: dict[str, Any],
                      return_result: bool = False) -> T | None:
         stmt = update(self.model).values(update_dict)
-        for key, value in filters.items():
-            if hasattr(self.model, key):
-                stmt = stmt.filter(getattr(self.model, key) == value)
+        stmt = self.apply_filters(stmt, filters)
         if return_result:
             updated = await self.session.scalar(stmt.returning(self.model))
             await self.session.commit()
@@ -75,8 +77,28 @@ class DeleteRepo[T](BaseRepo):
     async def delete(self,
                      filters: dict[str, Any]) -> None:
         stmt = delete(self.model)
-        for key, value in filters.items():
-            if hasattr(self.model, key):
-                stmt = stmt.filter(getattr(self.model, key) == value)
+        stmt = self.apply_filters(stmt, filters)
         await self.session.execute(stmt)
         await self.session.commit()
+
+
+class GetOneWithRelatedListRepo[T](BaseRepo):
+    async def get_one_with_related_obj_list(
+        self,
+        filters: dict[str, Any],
+        related_model: Base,
+    ) -> T | None:
+        stmt = select(self.model).options(selectinload(related_model))
+        stmt = self.apply_filters(stmt, filters)
+        return await self.session.scalar(stmt)
+
+
+class GetOneWithRelatedObjRepo[T](BaseRepo):
+    async def get_one_with_related_obj(
+        self,
+        filters: dict[str, Any],
+        related_model: Base,
+    ) -> T | None:
+        stmt = select(self.model).options(joinedload(related_model))
+        stmt = self.apply_filters(stmt, filters)
+        return await self.session.scalar(stmt)

@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Callable, TYPE_CHECKING
+from typing import Annotated, Any, Callable
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
@@ -9,10 +9,7 @@ from .access_token.repositories import AccessTokenRepo
 from api.users import schemas as user_schemas
 from api.users.repositories import UserRepo
 from core.settings import settings
-
-
-if TYPE_CHECKING:
-    from core.models import User
+from core.models import User
 
 
 class AuthService:
@@ -50,8 +47,9 @@ class AuthService:
 
         Raise `http_401_unauthorized` exception if user doesn't exist.
         """
-        valid_user = await self.user_repo.get_one_with_token(
+        valid_user = await self.user_repo.get_one_with_related_obj(
             filters={"username": user.username},
+            related_model=User.token,
         )
         if not (
             valid_user is not None
@@ -216,7 +214,8 @@ class AuthService:
         validated_token = token_utils.validate_token(token, "access")
         return await AuthService.get_user_by_token(
             token=validated_token,
-            repo_method=user_repo.get_one_with_profile,
+            repo_method=user_repo.get_one_with_related_obj,
+            related_model=User.profile,
         )
 
     @staticmethod
@@ -238,5 +237,6 @@ class AuthService:
         validated_token = token_utils.validate_token(token, "reset")
         return await AuthService.get_user_by_token(
             token=validated_token,
-            repo_method=user_repo.get_one_with_profile,
+            repo_method=user_repo.get_one_with_related_obj,
+            related_model=User.profile,
         )

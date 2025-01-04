@@ -28,7 +28,7 @@ async def get_user_profile(
 @router.patch("/update",
               response_model=ProfileResponse,
               status_code=status.HTTP_200_OK)
-async def update_my_profile(
+async def update_user_profile(
     current_user: Annotated[User, Depends(AuthService.get_current_user)],
     profile_service: Annotated[ProfileService, Depends(ProfileService)],
     first_name: str | None = Form(None),
