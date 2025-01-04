@@ -1,8 +1,11 @@
 from typing import Annotated, TYPE_CHECKING
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Path, status
 
+from .access_token import utils as token_utils
 from .services import AuthService
+from api.users.repositories import UserRepo
+from core.settings import settings
 
 
 if TYPE_CHECKING:
@@ -23,7 +26,7 @@ class Permissions:
         ```
         @router.get(
             "/any",
-            dependencies=Depends(Permissions(["is_admin"])),
+            dependencies=[Depends(Permissions(["is_admin"]))],
         )
         async def get_any():
             ...
@@ -45,8 +48,68 @@ class Permissions:
         for permission in self.required_permissions:
             if user.as_dict()[permission]:
                 return user
-
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not allowed to do this :("
+        )
+
+
+class IsOwner:
+    """
+    Get current session user with required object (`obj_name: obj_id`)
+
+    - Return current session user if user is owner of required object.
+    - Raise `http_403_forbidden` exception, if user owns no objects with
+      such parameters.
+
+    ** WARNING **
+        Using this class you no longer can use path parameter `{any_id}`
+        inside your route, since it is being used to get user
+        with requred object. You can get access to it via `user` model:
+        ```
+        post_id = user.posts[0].id # for one-to-many relationship
+        profile_id = user.profile.id # for one-to-one relationship
+        ```
+    Usage:
+        Put into dependency with the name of required object:
+        ```
+        @router.get(
+            "/any",
+            dependencies=[Depends(IsOwner("post"))],
+        )
+        async def get_any():
+            ...
+
+        @router.get("/any")
+        async def get_any(
+            user: Annotated[User, Depends(Permissions("comment"))],
+        ):
+            ...
+        ```
+    """
+    def __init__(self, obj_name: str) -> None:
+        self.obj_name = obj_name
+
+    async def __call__(
+        self,
+        obj_id: Annotated[int, Path],
+        user_repo: Annotated[UserRepo, Depends(UserRepo)],
+        token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
+    ) -> "User":
+
+        validated_token = token_utils.validate_token(token, "access")
+        if self.obj_name == "sub_tier":
+            user = await AuthService.get_user_by_token(
+                token=validated_token,
+                repo_method=user_repo.get_one_with_sub_tier_id,
+                sub_tier_id=obj_id
+            )
+
+        if user is not None:
+            return user
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=("You are not allowed to do this :( "
+                    "May be it has already been deleted.")
         )

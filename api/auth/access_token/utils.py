@@ -107,3 +107,15 @@ def get_token_payload(token: str) -> dict[str, Any]:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token! {error}",
         )
+
+
+def validate_token(token: str, expected_type: str) -> dict[str, Any]:
+    validated_token = get_token_payload(token)
+    token_type = validated_token.get("type")
+    if token_type != expected_type:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=(f"Invalid token type: {token_type}! "
+                    f"Expected: {expected_type}.")
+        )
+    return validated_token

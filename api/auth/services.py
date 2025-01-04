@@ -1,4 +1,4 @@
-from typing import Annotated, TYPE_CHECKING
+from typing import Annotated, Any, Callable, TYPE_CHECKING
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
@@ -192,28 +192,11 @@ class AuthService:
 
     @staticmethod
     async def get_user_by_token(
-        token: str,
-        expected_type: str,
-        user_repo: UserRepo,
+        token: dict,
+        repo_method: Callable,
+        **kwargs: Any,
     ) -> "User":
-        """
-        ** Static method **
-
-        Get session user by provided token,
-        raise `http_401_unauthorized` exception if token has
-        unexpected type or is invalid.
-        """
-        validated_token = token_utils.get_token_payload(token)
-        token_type = validated_token.get("type")
-        if token_type != expected_type:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=(f"Invalid token type: {token_type}! "
-                        f"Expected: {expected_type}.")
-            )
-        return await user_repo.get_one_with_profile(
-            filters={"username": validated_token.get("sub")},
-        )
+        return await repo_method({"username": token.get("sub")}, **kwargs)
 
     @staticmethod
     async def get_current_user(
@@ -230,10 +213,10 @@ class AuthService:
         If this method is injected by `Depends()` into a route function,
         only `authenticated` users will be allowed to use it.
         """
+        validated_token = token_utils.validate_token(token, "access")
         return await AuthService.get_user_by_token(
-            token=token,
-            expected_type="access",
-            user_repo=user_repo,
+            token=validated_token,
+            repo_method=user_repo.get_one_with_profile,
         )
 
     @staticmethod
@@ -252,8 +235,8 @@ class AuthService:
         only users authenticated by reset_token will be allowed to use it.
         Reset token is used only for password reset and has short lifetime.
         """
+        validated_token = token_utils.validate_token(token, "reset")
         return await AuthService.get_user_by_token(
-            token=token,
-            expected_type="reset",
-            user_repo=user_repo,
+            token=validated_token,
+            repo_method=user_repo.get_one_with_profile,
         )

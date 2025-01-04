@@ -63,8 +63,7 @@ class UpdateRepo[T](BaseRepo):
             if hasattr(self.model, key):
                 stmt = stmt.filter(getattr(self.model, key) == value)
         if return_result:
-            stmt = stmt.returning(self.model)
-            updated = await self.session.scalar(stmt)
+            updated = await self.session.scalar(stmt.returning(self.model))
             await self.session.commit()
             return updated
         else:

@@ -36,3 +36,8 @@ class SubTierService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Subscription with {error_field} already exists!",
             )
+
+    async def delete_sub_tier(self, sub_tier_id: int) -> None:
+        await self.sub_tier_repo.delete(
+            filters={"id": sub_tier_id}
+        )
