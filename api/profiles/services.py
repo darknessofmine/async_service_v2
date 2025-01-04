@@ -66,8 +66,9 @@ class ProfileService:
         Raise `http_404_not_found` exception,
         if user with profile doesn't have `is_author` status.
         """
-        user = await self.user_repo.get_one_with_profile(
+        user = await self.user_repo.get_one_with_related_obj(
             filters={"username": username},
+            related_model=User.profile,
         )
         if user is None or not user.is_author:
             raise HTTPException(

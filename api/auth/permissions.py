@@ -1,4 +1,4 @@
-from typing import Annotated, TYPE_CHECKING
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, Path, status
 
@@ -6,10 +6,7 @@ from .access_token import utils as token_utils
 from .services import AuthService
 from api.users.repositories import UserRepo
 from core.settings import settings
-
-
-if TYPE_CHECKING:
-    from core.models import User
+from core.models import User
 
 
 class Permissions:
@@ -101,8 +98,9 @@ class IsOwner:
         if self.obj_name == "sub_tier":
             user = await AuthService.get_user_by_token(
                 token=validated_token,
-                repo_method=user_repo.get_one_with_sub_tier_id,
-                sub_tier_id=obj_id
+                repo_method=user_repo.get_one_with_related_obj_id,
+                related_model=User.sub_tiers,
+                related_model_id=obj_id,
             )
 
         if user is not None:
