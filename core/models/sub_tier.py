@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -8,7 +8,7 @@ from .mixins import IntIdPkMixin
 
 
 if TYPE_CHECKING:
-    from core.models import User
+    from core.models import Post, User
 
 
 class SubTier(Base, IntIdPkMixin):
@@ -33,3 +33,6 @@ class SubTier(Base, IntIdPkMixin):
     )
 
     user: Mapped["User"] = relationship(back_populates="sub_tiers")
+    posts: Mapped[Optional[list["Post"]]] = relationship(
+        back_populates="sub_tier",
+    )

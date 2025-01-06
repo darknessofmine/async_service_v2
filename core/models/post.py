@@ -1,10 +1,15 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, func, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
 from .mixins import IntIdPkMixin
+
+
+if TYPE_CHECKING:
+    from core.models import SubTier, User
 
 
 class Post(Base, IntIdPkMixin):
@@ -25,3 +30,6 @@ class Post(Base, IntIdPkMixin):
         ForeignKey("sub_tiers.id", ondelete="SET NULL"),
         nullable=True,
     )
+
+    user: Mapped["User"] = relationship(back_populates="posts")
+    sub_tier: Mapped["SubTier"] = relationship(back_populates="posts")
