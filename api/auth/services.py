@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Callable
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
@@ -189,14 +189,6 @@ class AuthService:
         )
 
     @staticmethod
-    async def get_user_by_token(
-        token: dict,
-        repo_method: Callable,
-        **kwargs: Any,
-    ) -> "User":
-        return await repo_method({"username": token.get("sub")}, **kwargs)
-
-    @staticmethod
     async def get_current_user(
         token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
         user_repo: Annotated[UserRepo, Depends(UserRepo)],
@@ -212,9 +204,8 @@ class AuthService:
         only `authenticated` users will be allowed to use it.
         """
         validated_token = token_utils.validate_token(token, "access")
-        return await AuthService.get_user_by_token(
-            token=validated_token,
-            repo_method=user_repo.get_one_with_related_obj,
+        return await user_repo.get_one_with_related_obj(
+            filters={"username": validated_token.get("sub")},
             related_model=User.profile,
         )
 
@@ -235,8 +226,6 @@ class AuthService:
         Reset token is used only for password reset and has short lifetime.
         """
         validated_token = token_utils.validate_token(token, "reset")
-        return await AuthService.get_user_by_token(
-            token=validated_token,
-            repo_method=user_repo.get_one_with_related_obj,
-            related_model=User.profile,
+        return await user_repo.get_one(
+            filters={"username": validated_token.get("sub")},
         )

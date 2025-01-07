@@ -101,14 +101,18 @@ class IsOwner:
     ) -> "User":
         validated_token = token_utils.validate_token(token, "access")
         if self.obj_name in self.RELATED_MODELS_BY_OBJ_NAMES:
-            return await AuthService.get_user_by_token(
-                token=validated_token,
-                repo_method=user_repo.get_one_with_related_obj_id,
+            user = await user_repo.get_one_with_related_obj_id(
+                filters={"username": validated_token.get("sub")},
                 related_model=self.RELATED_MODELS_BY_OBJ_NAMES[self.obj_name],
                 related_model_id=obj_id,
             )
+            if user is not None:
+                return user
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=("You are not allowed to do this :( "
+                        "May be it has already been deleted though...")
+            )
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=("You are not allowed to do this :( "
-                    "May be it has already been deleted though...")
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
