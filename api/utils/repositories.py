@@ -18,7 +18,9 @@ class BaseRepo:
     ) -> None:
         self.session = session
 
-    def apply_filters(self, stmt: Any, filters: dict[str, Any]) -> Any:
+    def apply_filters(self,
+                      stmt: Any,
+                      filters: dict[str, Any]) -> Any:
         if filters:
             for key, value in filters.items():
                 if hasattr(self.model, key):

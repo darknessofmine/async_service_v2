@@ -79,7 +79,7 @@ class IsOwner:
 
         @router.get("/any")
         async def get_any(
-            user: Annotated[User, Depends(Permissions("comment"))],
+            user: Annotated[User, Depends(IsOwner("comment"))],
         ):
             ...
         ```
@@ -109,5 +109,5 @@ class IsOwner:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=("You are not allowed to do this :( "
-                    "May be it has already been deleted.")
+                    "May be it has already been deleted though...")
         )
