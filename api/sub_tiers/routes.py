@@ -54,9 +54,9 @@ async def get_user_sub_tiers(
 async def update_sub_tier(
     user: Annotated[User, Depends(IsOwner("sub_tier"))],
     sub_tier_service: Annotated[SubTierService, Depends(SubTierService)],
-    title: str = Form(None),
-    text: str = Form(None),
-    price: int = Form(None),
+    title: str | None = Form(None),
+    text: str | None = Form(None),
+    price: int | None = Form(None),
     image: Annotated[UploadFile | str | None, File()] = None,
 ) -> SubTierResponse:
     image_url = file_service.get_sub_tier_image_url(image)

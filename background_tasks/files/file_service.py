@@ -26,6 +26,11 @@ class FileService:
             return f"{BASE_DIR}/media/sub_tier/{image.filename}"
 
     @staticmethod
+    def get_post_file_url(file: UploadFile | str | None) -> str | None:
+        if file:
+            return f"{BASE_DIR}/media/post/{file.filename}"
+
+    @staticmethod
     async def save_file_async(file_to_save: UploadFile | str | None,
                               file_url: str) -> None:
         if file_to_save:
