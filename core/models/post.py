@@ -9,7 +9,7 @@ from .mixins import IntIdPkMixin
 
 
 if TYPE_CHECKING:
-    from core.models import SubTier, User
+    from core.models import Comment, SubTier, User
 
 
 class Post(Base, IntIdPkMixin):
@@ -33,3 +33,4 @@ class Post(Base, IntIdPkMixin):
 
     user: Mapped["User"] = relationship(back_populates="posts")
     sub_tier: Mapped["SubTier"] = relationship(back_populates="posts")
+    comments: Mapped["Comment"] = relationship(back_populates="post")
