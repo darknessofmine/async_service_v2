@@ -86,8 +86,9 @@ class IsOwner:
     """
 
     RELATED_MODELS_BY_OBJ_NAMES = {
-        "sub_tier": User.sub_tiers,
+        "comment": User.comments,
         "post": User.posts,
+        "sub_tier": User.sub_tiers,
     }
 
     def __init__(self, obj_name: str) -> None:
@@ -99,20 +100,20 @@ class IsOwner:
         user_repo: Annotated[UserRepo, Depends(UserRepo)],
         token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
     ) -> "User":
-        validated_token = token_utils.validate_token(token, "access")
-        if self.obj_name in self.RELATED_MODELS_BY_OBJ_NAMES:
-            user = await user_repo.get_one_with_related_obj_id(
-                filters={"username": validated_token.get("sub")},
-                related_model=self.RELATED_MODELS_BY_OBJ_NAMES[self.obj_name],
-                related_model_id=obj_id,
-            )
-            if user is not None:
-                return user
+        if self.obj_name not in self.RELATED_MODELS_BY_OBJ_NAMES:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=("You are not allowed to do this :( "
-                        "May be it has already been deleted though...")
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+        validated_token = token_utils.validate_token(token, "access")
+        user = await user_repo.get_one_with_related_obj_id(
+            filters={"username": validated_token.get("sub")},
+            related_model=self.RELATED_MODELS_BY_OBJ_NAMES[self.obj_name],
+            related_model_id=obj_id,
+        )
+        if user is not None:
+            return user
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=("You are not allowed to do this :( "
+                    "May be it has already been deleted though...")
         )
