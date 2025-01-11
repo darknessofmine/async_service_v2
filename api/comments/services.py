@@ -14,8 +14,8 @@ class CommentService:
     ) -> None:
         self.comment_repo = comment_repo
 
-    async def craete_comment(self, comment_create: CommentCreate) -> Comment:
-        return await self.comment_repo.create(**comment_create.model_dump())
+    async def create_comment(self, comment_create: CommentCreate) -> Comment:
+        return await self.comment_repo.create(comment_create.model_dump())
 
     async def update_comment(
         self,

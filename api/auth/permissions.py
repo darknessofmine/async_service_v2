@@ -104,6 +104,7 @@ class IsOwner:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
         validated_token = token_utils.validate_token(token, "access")
         user = await user_repo.get_one_with_related_obj_id(
             filters={"username": validated_token.get("sub")},
