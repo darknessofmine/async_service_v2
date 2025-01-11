@@ -1,4 +1,5 @@
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, File, Form, Path, UploadFile, status
 
 from .schemas import PostCreate, PostResponse, PostUpdate
@@ -8,7 +9,7 @@ from background_tasks.files.file_service import file_service
 from core.models.user import User
 
 router = APIRouter(
-    prefix="posts",
+    prefix="/posts",
     tags=["posts"],
 )
 

@@ -33,4 +33,6 @@ class User(Base, IntIdPkMixin):
         back_populates="user",
     )
     posts: Mapped[Optional[list["Post"]]] = relationship(back_populates="user")
-    comments: Mapped["Comment"] = relationship(back_populates="user")
+    comments: Mapped[Optional[list["Comment"]]] = relationship(
+        back_populates="user",
+    )
