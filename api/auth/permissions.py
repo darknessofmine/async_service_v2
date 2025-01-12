@@ -40,8 +40,8 @@ class Permissions:
 
     def __call__(
         self,
-        user: Annotated["User", Depends(AuthService.get_current_user)],
-    ) -> "User":
+        user: Annotated[User, Depends(AuthService.get_current_user)],
+    ) -> User:
         for permission in self.required_permissions:
             if user.as_dict()[permission]:
                 return user
@@ -99,7 +99,7 @@ class IsOwner:
         obj_id: Annotated[int, Path],
         user_repo: Annotated[UserRepo, Depends(UserRepo)],
         token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
-    ) -> "User":
+    ) -> User:
         if self.obj_name not in self.RELATED_MODELS_BY_OBJ_NAMES:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
