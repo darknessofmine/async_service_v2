@@ -4,6 +4,7 @@ __all__ = (
     "Comment",
     "Post",
     "Profile",
+    "Subscription",
     "SubTier",
     "User",
 )
@@ -13,5 +14,6 @@ from .base import Base
 from .comment import Comment
 from .post import Post
 from .profile import Profile
+from .subscription import Subscription
 from .sub_tier import SubTier
 from .user import User
