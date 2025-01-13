@@ -1,8 +1,14 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import ForeignKey, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
 from .mixins import IntIdPkMixin
+
+
+if TYPE_CHECKING:
+    from core.models import SubTier, User
 
 
 class Subscription(Base, IntIdPkMixin):
@@ -15,20 +21,14 @@ class Subscription(Base, IntIdPkMixin):
     )
 
     owner_id: Mapped[int] = mapped_column(
-        ForeignKey(
-            "users.id",
-            ondelete="CASCADE",
-        ),
+        ForeignKey("users.id", ondelete="CASCADE"),
     )
     sub_id: Mapped[int] = mapped_column(
-        ForeignKey(
-            "users.id",
-            ondelete="CASCADE",
-        ),
+        ForeignKey("users.id", ondelete="CASCADE"),
     )
     sub_tier_id: Mapped[int] = mapped_column(
-        ForeignKey(
-            "sub_tiers.id",
-            ondelete="SET NULL",
-        )
+        ForeignKey("sub_tiers.id", ondelete="SET NULL")
     )
+
+    owner: Mapped["User"] = relationship(back_populates="subscriptions")
+    sub: Mapped["SubTier"] = relationship(back_populates="subscribers")

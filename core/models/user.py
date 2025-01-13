@@ -8,7 +8,14 @@ from .mixins import IntIdPkMixin
 
 
 if TYPE_CHECKING:
-    from core.models import AccessToken, Comment, Post, Profile, SubTier
+    from core.models import (
+        AccessToken,
+        Comment,
+        Post,
+        Profile,
+        Subscription,
+        SubTier,
+    )
 
 
 class User(Base, IntIdPkMixin):
@@ -35,4 +42,10 @@ class User(Base, IntIdPkMixin):
     posts: Mapped[Optional[list["Post"]]] = relationship(back_populates="user")
     comments: Mapped[Optional[list["Comment"]]] = relationship(
         back_populates="user",
+    )
+    subscriptions: Mapped[Optional[list["Subscription"]]] = relationship(
+        back_populates="owner",
+    )
+    subscribers: Mapped[Optional[list["Subscription"]]] = relationship(
+        back_populates="sub",
     )
