@@ -32,10 +32,10 @@ class Subscription(Base, IntIdPkMixin):
 
     owner: Mapped["User"] = relationship(
         back_populates="subscriptions",
-        foreign_keys=owner_id,
+        foreign_keys="Subscription.owner_id",
     )
     sub: Mapped["User"] = relationship(
         back_populates="subscribers",
-        foreign_keys=sub_id,
+        foreign_keys="Subscription.sub_id",
     )
     sub_tier: Mapped["SubTier"] = relationship(back_populates="subscriptions")
