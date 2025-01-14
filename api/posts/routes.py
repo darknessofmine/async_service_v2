@@ -22,8 +22,8 @@ async def create_post(
     post_service: Annotated[PostService, Depends(PostService)],
     title: str = Form(...),
     text: str | None = Form(None),
+    sub_tier_id: int | None = Form(None),
     file: Annotated[UploadFile | str | None, File()] = None,
-    sub_tier_id: int | None = None,
 ) -> PostResponse:
     file_url = file_service.get_post_file_url(file)
     # TODO: Finish backgruond file save.
@@ -54,9 +54,9 @@ async def update_post(
     user: Annotated[User, Depends(IsOwner("post"))],
     post_service: Annotated[PostService, Depends(PostService)],
     title: str = Form(None),
+    sub_tier_id: int | None = Form(None),
     text: str = Form(None),
     file: Annotated[UploadFile | str | None, File()] = None,
-    sub_tier_id: int | None = None,
 ) -> PostResponse:
     file_url = file_service.get_post_file_url(file)
     # TODO: Finish backgruond file save.

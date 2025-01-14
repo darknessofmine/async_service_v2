@@ -45,7 +45,9 @@ class User(Base, IntIdPkMixin):
     )
     subscriptions: Mapped[Optional[list["Subscription"]]] = relationship(
         back_populates="owner",
+        foreign_keys="Subscription.sub_id",
     )
     subscribers: Mapped[Optional[list["Subscription"]]] = relationship(
         back_populates="sub",
+        foreign_keys="Subscription.sub_id",
     )
