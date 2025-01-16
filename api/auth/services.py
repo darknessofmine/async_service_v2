@@ -47,9 +47,9 @@ class AuthService:
 
         Raise `http_401_unauthorized` exception if user doesn't exist.
         """
-        valid_user = await self.user_repo.get_one_with_related_obj(
+        valid_user = await self.user_repo.get_one(
             filters={"username": user.username},
-            related_model=User.token,
+            related_o2o_models=[User.token],
         )
         if not (
             valid_user is not None
@@ -204,9 +204,9 @@ class AuthService:
         only `authenticated` users will be allowed to use it.
         """
         validated_token = token_utils.validate_token(token, "access")
-        return await user_repo.get_one_with_related_obj(
+        return await user_repo.get_one(
             filters={"username": validated_token.get("sub")},
-            related_model=User.profile,
+            related_o2o_models=[User.profile],
         )
 
     @staticmethod

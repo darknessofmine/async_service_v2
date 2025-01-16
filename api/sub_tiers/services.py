@@ -41,9 +41,9 @@ class SubTierService:
         self,
         username: str,
     ) -> list["SubTier"]:
-        user = await self.user_repo.get_one_with_related_obj_list(
+        user = await self.user_repo.get_one(
             filters={"username": username},
-            related_model=User.sub_tiers
+            related_o2m_models=[User.sub_tiers],
         )
         if user.is_author:
             return user.sub_tiers

@@ -23,9 +23,9 @@ class PostService:
         return await self.post_repo.create(create_dict)
 
     async def get_post(self, post_id: int) -> Post:
-        return await self.post_repo.get_one_with_related_obj_list(
+        return await self.post_repo.get_one(
             filters={"id": post_id},
-            related_model=Post.comments,
+            related_o2m_models=[Post.comments],
         )
 
     async def update_post(self, post_update: PostUpdate, post_id: int) -> Post:
