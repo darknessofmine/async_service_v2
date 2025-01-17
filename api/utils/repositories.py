@@ -23,9 +23,11 @@ class BaseRepo:
     ) -> None:
         self.session = session
 
-    def _apply_filters(self,
-                       stmt: Any,
-                       filters: dict[str, Any]) -> Any:
+    def _apply_filters(
+        self,
+        stmt: Any,
+        filters: dict[str, Any],
+    ) -> Any:
         if filters:
             for key, value in filters.items():
                 if hasattr(self.model, key):
@@ -54,8 +56,10 @@ class BaseRepo:
 
 
 class CreateRepo[T](BaseRepo):
-    async def create(self,
-                     data_dict: dict[str, Any]) -> T:
+    async def create(
+        self,
+        data_dict: dict[str, Any],
+    ) -> T:
         new_obj = self.model(**data_dict)
         self.session.add(new_obj)
         await self.session.commit()
@@ -107,10 +111,12 @@ class GetManyRepo[T](BaseRepo):
 
 
 class UpdateRepo[T](BaseRepo):
-    async def update(self,
-                     update_dict: dict[str, Any],
-                     filters: dict[str, Any],
-                     return_result: bool = False) -> T | None:
+    async def update(
+        self,
+        update_dict: dict[str, Any],
+        filters: dict[str, Any],
+        return_result: bool = False,
+    ) -> T | None:
         stmt = update(self.model).values(update_dict)
         stmt = self._apply_filters(stmt, filters)
         if return_result:
@@ -123,9 +129,11 @@ class UpdateRepo[T](BaseRepo):
 
 
 class DeleteRepo[T](BaseRepo):
-    async def delete(self,
-                     filters: dict[str, Any],
-                     return_result: bool = False) -> T | None:
+    async def delete(
+        self,
+        filters: dict[str, Any],
+        return_result: bool = False,
+    ) -> T | None:
         stmt = delete(self.model)
         stmt = self._apply_filters(stmt, filters)
         if return_result:

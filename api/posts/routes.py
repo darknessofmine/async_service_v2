@@ -54,8 +54,8 @@ async def update_post(
     user: Annotated[User, Depends(IsOwner("post"))],
     post_service: Annotated[PostService, Depends(PostService)],
     title: str = Form(None),
-    sub_tier_id: int | None = Form(None),
     text: str = Form(None),
+    sub_tier_id: int | None = Form(None),
     file: Annotated[UploadFile | str | None, File()] = None,
 ) -> PostResponse:
     file_url = file_service.get_post_file_url(file)
