@@ -27,7 +27,8 @@ class Subscription(Base, IntIdPkMixin):
         ForeignKey("users.id", ondelete="CASCADE"),
     )
     sub_tier_id: Mapped[int] = mapped_column(
-        ForeignKey("sub_tiers.id", ondelete="SET NULL")
+        ForeignKey("sub_tiers.id", ondelete="SET NULL"),
+        nullable=True,
     )
 
     owner: Mapped["User"] = relationship(
