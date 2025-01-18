@@ -64,7 +64,7 @@ class ProfileService:
         Get user's profile by their username.
 
         Raise `http_404_not_found` exception,
-        if user with profile doesn't have `is_author` status.
+        if user doesn't exist or doesn't have `is_author` status.
         """
         user = await self.user_repo.get_one(
             filters={"username": username},

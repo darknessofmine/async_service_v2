@@ -19,7 +19,7 @@ router = APIRouter(
              response_model=SubTierResponse,
              status_code=status.HTTP_201_CREATED)
 async def create_sub_tier(
-    user: Annotated[User, Depends(Permissions(["is_author"]))],
+    user: Annotated[User, Depends(Permissions("is_author"))],
     sub_tier_service: Annotated[SubTierService, Depends(SubTierService)],
     title: str = Form(...),
     text: str = Form(...),

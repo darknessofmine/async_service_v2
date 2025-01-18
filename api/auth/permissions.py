@@ -18,24 +18,24 @@ class Permissions:
     - Raise `http_403_forbidden` exception, if there were no matches.
 
     Usage:
-        Put into dependency with list of required permissions
+        Put into dependency with required permissions
         (for roles info check `core.models.user: User`)
         ```
         @router.get(
             "/any",
-            dependencies=[Depends(Permissions(["is_admin"]))],
+            dependencies=[Depends(Permissions("is_admin"))],
         )
         async def get_any():
             ...
 
         @router.get("/any")
         async def get_any(
-            user: User = Depends(Permissions(["is_admin", "is_verified"])),
+            user: User = Depends(Permissions("is_admin", "is_verified")),
         ):
             ...
         ```
     """
-    def __init__(self, required_permissions: list[str]) -> None:
+    def __init__(self, *required_permissions: str) -> None:
         self.required_permissions = required_permissions
 
     def __call__(
@@ -62,7 +62,7 @@ class IsOwner:
     ** WARNING **
         Using this class you no longer can use path parameter `{any_id}`
         inside your route, since it is being used to get user
-        with requred object. You can get access to it via `user` model:
+        with required object. You can get access to it through `user` model:
         ```
         post_id = user.posts[0].id # for one-to-many relationship
         profile_id = user.profile.id # for one-to-one relationship

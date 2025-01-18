@@ -18,7 +18,7 @@ router = APIRouter(
              response_model=PostResponse,
              status_code=status.HTTP_201_CREATED)
 async def create_post(
-    user: Annotated[User, Depends(Permissions(["is_author"]))],
+    user: Annotated[User, Depends(Permissions("is_author"))],
     post_service: Annotated[PostService, Depends(PostService)],
     title: str = Form(...),
     text: str | None = Form(None),
@@ -47,7 +47,7 @@ async def get_one_post(
     return await post_service.get_post(post_id=post_id)
 
 
-@router.patch("/{post_id}",
+@router.patch("/{obj_id}",
               response_model=PostResponse,
               status_code=status.HTTP_200_OK)
 async def update_post(

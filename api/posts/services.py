@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 
 from .repositories import PostRepo
 from .schemas import PostCreate, PostUpdate
@@ -23,10 +23,16 @@ class PostService:
         return await self.post_repo.create(create_dict)
 
     async def get_post(self, post_id: int) -> Post:
-        return await self.post_repo.get_one(
+        post = await self.post_repo.get_one(
             filters={"id": post_id},
             related_o2m_models=[Post.comments],
         )
+        if post is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=(f"Post with id={post_id} not found."),
+            )
+        return post
 
     async def update_post(self, post_update: PostUpdate, post_id: int) -> Post:
         update_dict = dict()
