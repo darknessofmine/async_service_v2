@@ -1,4 +1,4 @@
-from typing import Annotated, TYPE_CHECKING
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
@@ -6,10 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from .repositories import UserRepo
 from .schemas import UserCreate, UserUpdate
 from api.auth import utils as auth_utils
-
-
-if TYPE_CHECKING:
-    from core.models import User
+from core.models import User
 
 
 class UserService:
@@ -19,7 +16,7 @@ class UserService:
     ) -> None:
         self.user_repo: UserRepo = user_repo
 
-    async def create_superuser(self, user: UserCreate) -> "User":
+    async def create_superuser(self, user: UserCreate) -> User:
         """
         Create new superuser.
 
@@ -46,9 +43,9 @@ class UserService:
 
     async def change_author_status(
         self,
-        user: "User",
+        user: User,
         author_status: bool,
-    ) -> "User":
+    ) -> User:
         """
         Change change user's attribute `is_author`,
         depending on `author_status: bool` parameter.
@@ -64,11 +61,27 @@ class UserService:
             return_result=True,
         )
 
+    async def get_user_by_username_with_sub_tiers(
+        self,
+        username: str,
+    ) -> User | None:
+        user = await self.user_repo.get_one(
+            filters={"username": username},
+            related_o2m_models=[User.sub_tiers],
+        )
+        if user is not None and user.is_author:
+            return user
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=(f"User `{username}` doesn't exist "
+                    "or doesn't have author status"),
+        )
+
     async def change_admin_status(
         self,
-        user: "User",
+        user: User,
         admin_status: bool,
-    ) -> "User":
+    ) -> User:
         """
         Change change user's attribute `is_admin`,
         depending on `admin_status: bool` parameter.
@@ -81,9 +94,9 @@ class UserService:
 
     async def change_user_email(
         self,
-        user: "User",
+        user: User,
         user_update: UserUpdate,
-    ) -> "User":
+    ) -> User:
         """
         Change user's email.
 
@@ -109,7 +122,7 @@ class UserService:
                 detail=f"User with {error_field} already exists!",
             )
 
-    async def delete_user(self, user: "User") -> None:
+    async def delete_user(self, user: User) -> None:
         """
         Delete user.
         """

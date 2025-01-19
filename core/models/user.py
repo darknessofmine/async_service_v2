@@ -38,6 +38,7 @@ class User(Base, IntIdPkMixin):
     profile: Mapped[Optional["Profile"]] = relationship(back_populates="user")
     sub_tiers: Mapped[Optional[list["SubTier"]]] = relationship(
         back_populates="user",
+        order_by="SubTier.price",
     )
     posts: Mapped[Optional[list["Post"]]] = relationship(back_populates="user")
     comments: Mapped[Optional[list["Comment"]]] = relationship(
