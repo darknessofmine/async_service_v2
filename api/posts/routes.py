@@ -5,16 +5,16 @@ from fastapi import APIRouter, Depends, File, Form, Path, UploadFile, status
 from .schemas import PostCreate, PostResponse, PostUpdate
 from .services import PostService
 from api.auth.permissions import IsOwner, Permissions
+from api.users.services import UserService
 from background_tasks.files.file_service import file_service
 from core.models.user import User
 
 router = APIRouter(
-    prefix="/posts",
     tags=["posts"],
 )
 
 
-@router.post("/",
+@router.post("/posts/",
              response_model=PostResponse,
              status_code=status.HTTP_201_CREATED)
 async def create_post(
@@ -37,17 +37,27 @@ async def create_post(
     return await post_service.create_post(user, post_create)
 
 
-@router.get("/{post_id}",
+@router.get("/{username}/posts/{post_id}",
             response_model=PostResponse,
             status_code=status.HTTP_200_OK)
 async def get_one_post(
     post_service: Annotated[PostService, Depends(PostService)],
-    post_id: Annotated[int, Path],
+    post_owner: Annotated[User, Depends(UserService.check_user_owns_post)],
 ) -> PostResponse:
-    return await post_service.get_post(post_id=post_id)
+    return await post_service.get_post(post_id=post_owner.posts[0].id)
 
 
-@router.patch("/{obj_id}",
+@router.get("/{username}/posts",
+            response_model=list[PostResponse],
+            status_code=status.HTTP_200_OK)
+async def get_all_user_posts(
+    post_service: Annotated[PostService, Depends(PostService)],
+    username: Annotated[str, Path],
+) -> list[PostResponse]:
+    return await post_service.get_user_posts_by_username(username)
+
+
+@router.patch("/posts/{post_id}",
               response_model=PostResponse,
               status_code=status.HTTP_200_OK)
 async def update_post(
@@ -73,7 +83,7 @@ async def update_post(
     )
 
 
-@router.delete("/{post_id}")
+@router.delete("/posts/{post_id}")
 async def delete_post(
     user: Annotated[User, Depends(IsOwner("post"))],
     post_service: Annotated[PostService, Depends(PostService)],
