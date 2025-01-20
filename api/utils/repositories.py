@@ -1,7 +1,7 @@
 from typing import Annotated, Any
 
 from fastapi import Depends
-from sqlalchemy import delete, select, Sequence, update
+from sqlalchemy import delete, select, Sequence, text, update
 from sqlalchemy.orm import (
     contains_eager,
     joinedload,
@@ -10,6 +10,7 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .schemas import PropertyFilter
 from core.database import db
 from core.models import Base
 
@@ -93,20 +94,47 @@ class GetManyRepo[T](BaseRepo):
             stmt = stmt.offset(offset)
         return stmt
 
+    @staticmethod
+    def _apply_order(stmt: Any, order_by_field: str | None) -> Any:
+        if order_by_field:
+            if order_by_field[0] == "-":
+                stmt = stmt.order_by(
+                    text(f"{order_by_field.replace("-", "")} desc"),
+                )
+            else:
+                stmt = stmt.order_by(text(order_by_field))
+        return stmt
+
+    @staticmethod
+    def _apply_property_filter(
+        stmt: Any,
+        prop_filter: PropertyFilter,
+    ) -> Any:
+        if prop_filter:
+            stmt = (
+                stmt.join(prop_filter.related_model)
+                .filter(prop_filter.model_field == prop_filter.field_value)
+            )
+        return stmt
+
     async def get_many(
         self,
         filters: dict[str, Any] | None = None,
+        property_filter: PropertyFilter | None = None,
         related_o2o_models: list[Relationship] | None = None,
         related_o2m_models: list[Relationship] | None = None,
         limit: int | None = None,
         offset: int | None = None,
+        order_by: str | None = None,
     ) -> Sequence[T] | None:
         stmt = select(self.model)
         stmt = self._add_related_o2o_models(stmt, related_o2o_models)
         stmt = self._add_related_o2m_models(stmt, related_o2m_models)
+        stmt = self._apply_property_filter(stmt, property_filter)
         stmt = self._apply_filters(stmt, filters)
         stmt = self._add_limit(stmt, limit)
         stmt = self._add_offset(stmt, offset)
+        stmt = self._apply_order(stmt, order_by)
         return await self.session.scalars(stmt)
 
 
