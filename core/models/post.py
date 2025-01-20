@@ -33,4 +33,4 @@ class Post(Base, IntIdPkMixin):
 
     user: Mapped["User"] = relationship(back_populates="posts")
     sub_tier: Mapped["SubTier"] = relationship(back_populates="posts")
-    comments: Mapped["Comment"] = relationship(back_populates="post")
+    comments: Mapped[list["Comment"]] = relationship(back_populates="post")

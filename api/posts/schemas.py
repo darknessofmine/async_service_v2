@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from api.comments.schemas import CommentResponse
+
 
 class PostCreate(BaseModel):
     title: str
@@ -18,9 +20,11 @@ class PostUpdate(BaseModel):
 
 
 class PostResponse(BaseModel):
+    id: int
     title: str
     text: str | None = None
     file_url: str | None = None
     sub_tier_id: int | None = None
     created: datetime
     updated: datetime | None = None
+    comments: list[CommentResponse]
