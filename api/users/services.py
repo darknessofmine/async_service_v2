@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Path, status
 from sqlalchemy.exc import IntegrityError
 
 from .repositories import UserRepo
@@ -127,3 +127,21 @@ class UserService:
         Delete user.
         """
         await self.user_repo.delete(filters={"username": user.username})
+
+    @staticmethod
+    async def check_user_owns_post(
+        user_repo: Annotated[UserRepo, Depends(UserRepo)],
+        username: Annotated[str, Path],
+        post_id: Annotated[int, Path],
+    ) -> User | None:
+        user = await user_repo.get_one_with_related_obj_id(
+            filters={"username": username},
+            related_model=User.posts,
+            related_model_id=post_id,
+        )
+        if user is not None:
+            return user
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User ({username}) doesn't have post with id={post_id}.",
+        )
