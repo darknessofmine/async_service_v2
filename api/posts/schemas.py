@@ -21,6 +21,7 @@ class PostUpdate(BaseModel):
 
 class PostResponse(BaseModel):
     id: int
+    user_id: int
     title: str
     text: str | None = None
     file_url: str | None = None

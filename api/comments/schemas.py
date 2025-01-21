@@ -13,6 +13,7 @@ class CommentUpdate(BaseModel):
 
 class CommentResponse(BaseModel):
     id: int
+    user_id: int
     text: str
     created: datetime
     updated: datetime | None = None

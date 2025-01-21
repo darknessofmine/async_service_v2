@@ -16,7 +16,8 @@ class PropertyFilter(BaseModel):
             prop_filter = PropertyFilter(
                 related_model=Post.user,
                 model_field=User.username,
-                field_value=username,
+                field_value="ExampleUser",
+                return_model=True,
             )
             ...
         )
@@ -26,3 +27,4 @@ class PropertyFilter(BaseModel):
     related_model: Any
     model_field: Any
     field_value: Any
+    return_model: bool = False

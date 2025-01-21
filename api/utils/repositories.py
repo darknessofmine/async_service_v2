@@ -36,6 +36,20 @@ class BaseRepo:
         return stmt
 
     @staticmethod
+    def _apply_property_filter(
+        stmt: Any,
+        prop_filter: PropertyFilter,
+    ) -> Any:
+        if prop_filter:
+            stmt = stmt.join(prop_filter.related_model)
+            if prop_filter.return_model:
+                stmt = stmt.options(contains_eager(prop_filter.related_model))
+            stmt = stmt.filter(
+                prop_filter.model_field == prop_filter.field_value
+            )
+        return stmt
+
+    @staticmethod
     def _add_related_o2o_models(
         stmt: Any,
         related_o2o_models: list[Relationship] | None,
@@ -71,12 +85,14 @@ class GetOneRepo[T](BaseRepo):
     async def get_one(
         self,
         filters: dict[str, Any],
+        property_filter: PropertyFilter | None = None,
         related_o2o_models: list[Relationship] | None = None,
         related_o2m_models: list[Relationship] | None = None,
     ) -> T | None:
         stmt = select(self.model)
         stmt = self._add_related_o2o_models(stmt, related_o2o_models)
         stmt = self._add_related_o2m_models(stmt, related_o2m_models)
+        stmt = self._apply_property_filter(stmt, property_filter)
         stmt = self._apply_filters(stmt, filters)
         return await self.session.scalar(stmt)
 
@@ -103,18 +119,6 @@ class GetManyRepo[T](BaseRepo):
                 )
             else:
                 stmt = stmt.order_by(text(order_by_field))
-        return stmt
-
-    @staticmethod
-    def _apply_property_filter(
-        stmt: Any,
-        prop_filter: PropertyFilter,
-    ) -> Any:
-        if prop_filter:
-            stmt = (
-                stmt.join(prop_filter.related_model)
-                .filter(prop_filter.model_field == prop_filter.field_value)
-            )
         return stmt
 
     async def get_many(
@@ -171,18 +175,3 @@ class DeleteRepo[T](BaseRepo):
         else:
             await self.session.execute(stmt)
             await self.session.commit()
-
-
-class GetOneWithRelatedObjIdRepo[T](BaseRepo):
-    async def get_one_with_related_obj_id(
-        self,
-        filters: dict[str, Any],
-        related_model: Relationship,
-        related_model_id: int,
-    ) -> T | None:
-        stmt = (
-            select(self.model).join(related_model)
-            .options(contains_eager(related_model))
-        ).filter(related_model.property.mapper.class_.id == related_model_id)
-        stmt = self._apply_filters(stmt, filters)
-        return await self.session.scalar(stmt)
