@@ -6,7 +6,8 @@ from sqlalchemy.exc import IntegrityError
 from .repositories import UserRepo
 from .schemas import UserCreate, UserUpdate
 from api.auth import utils as auth_utils
-from core.models import User
+from api.utils.schemas import PropertyFilter
+from core.models import Comment, Post, SubTier, User
 
 
 class UserService:
@@ -61,22 +62,6 @@ class UserService:
             return_result=True,
         )
 
-    async def get_user_by_username_with_sub_tiers(
-        self,
-        username: str,
-    ) -> User | None:
-        user = await self.user_repo.get_one(
-            filters={"username": username},
-            related_o2m_models=[User.sub_tiers],
-        )
-        if user is not None and user.is_author:
-            return user
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=(f"User `{username}` doesn't exist "
-                    "or doesn't have author status"),
-        )
-
     async def change_admin_status(
         self,
         user: User,
@@ -128,20 +113,48 @@ class UserService:
         """
         await self.user_repo.delete(filters={"username": user.username})
 
-    @staticmethod
-    async def check_user_owns_post(
-        user_repo: Annotated[UserRepo, Depends(UserRepo)],
+
+class GetUserWithObjId:
+    RELATED_MODELS_BY_OBJ_NAME = {
+        "comment": User.comments,
+        "post": User.posts,
+        "sub_tier": User.sub_tiers,
+    }
+
+    RELATED_MODELS_ID_BY_OBJ_NAME = {
+        "comment": Comment.id,
+        "post": Post.id,
+        "sub_tier": SubTier.id,
+    }
+
+    def __init__(self, obj_name: str) -> None:
+        if obj_name not in self.RELATED_MODELS_BY_OBJ_NAME:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        self.obj_name = obj_name
+
+    async def __call__(
+        self,
         username: Annotated[str, Path],
-        post_id: Annotated[int, Path],
+        obj_id: Annotated[int, Path],
+        user_repo: Annotated[UserRepo, Depends(UserRepo)],
     ) -> User | None:
-        user = await user_repo.get_one_with_related_obj_id(
+        user = await user_repo.get_one(
             filters={"username": username},
-            related_model=User.posts,
-            related_model_id=post_id,
+            property_filter=PropertyFilter(
+                related_model=self.RELATED_MODELS_BY_OBJ_NAME[self.obj_name],
+                model_field=self.RELATED_MODELS_ID_BY_OBJ_NAME[self.obj_name],
+                field_value=obj_id,
+                return_model=True,
+            )
         )
         if user is not None:
             return user
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User ({username}) doesn't have post with id={post_id}.",
+            detail=(
+                f"User ({username}) doesn't have "
+                f"{self.obj_name} with id={obj_id}."
+            ),
         )

@@ -67,18 +67,5 @@ class SubTierService:
             return_result=True,
         )
 
-    async def user_has_sub_tier_or_404(
-        self,
-        user: User,
-        sub_tier_id: int
-    ) -> None:
-        for sub_tier in user.sub_tiers:
-            if sub_tier.id == sub_tier_id:
-                return
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User doesn't have such subscription tier.",
-        )
-
     async def delete_sub_tier(self, sub_tier_id: int) -> None:
         await self.sub_tier_repo.delete(filters={"id": sub_tier_id})

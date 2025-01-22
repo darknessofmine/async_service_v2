@@ -2,12 +2,13 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Path, status
 
+
 from .access_token import utils as token_utils
 from .services import AuthService
 from api.users.repositories import UserRepo
-from api.utils.schemas import PropertyFilter
+from api.users.services import GetUserWithObjId
 from core.settings import settings
-from core.models import Comment, Post, SubTier, User
+from core.models import User
 
 
 class Permissions:
@@ -85,19 +86,6 @@ class IsOwner:
             ...
         ```
     """
-
-    RELATED_MODELS_BY_OBJ_NAME = {
-        "comment": User.comments,
-        "post": User.posts,
-        "sub_tier": User.sub_tiers,
-    }
-
-    RELATED_MODELS_ID_BY_OBJ_NAME = {
-        "comment": Comment.id,
-        "post": Post.id,
-        "sub_tier": SubTier.id,
-    }
-
     def __init__(self, obj_name: str) -> None:
         self.obj_name = obj_name
 
@@ -107,25 +95,17 @@ class IsOwner:
         user_repo: Annotated[UserRepo, Depends(UserRepo)],
         token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
     ) -> User:
-        if self.obj_name not in self.RELATED_MODELS_BY_OBJ_NAME:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
         validated_token = token_utils.validate_token(token, "access")
-        user = await user_repo.get_one(
-            filters={"username": validated_token.get("sub")},
-            property_filter=PropertyFilter(
-                related_model=self.RELATED_MODELS_BY_OBJ_NAME[self.obj_name],
-                model_field=self.RELATED_MODELS_ID_BY_OBJ_NAME[self.obj_name],
-                field_value=obj_id,
-                return_model=True,
+        get_user_with_obj_id = GetUserWithObjId(self.obj_name)
+        try:
+            return await get_user_with_obj_id(
+                username=validated_token.get("sub"),
+                obj_id=obj_id,
+                user_repo=user_repo,
             )
-        )
-        if user is not None:
-            return user
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=("You are not allowed to do this :( "
-                    "May be it has already been deleted though...")
-        )
+        except HTTPException:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=("You are not allowed to do this :( "
+                        "May be it has already been deleted though...")
+            )
