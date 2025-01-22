@@ -2,10 +2,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, Path, UploadFile, status
 
-from .schemas import PostCreate, PostResponse, PostUpdate
+from .schemas import PostCreate, PostResponse, PostUpdate, PostUpdateResponse
 from .services import PostService
 from api.auth.permissions import IsOwner, Permissions
-from api.users.services import UserService
+from api.users.services import GetUserWithObjId
 from background_tasks.files.file_service import file_service
 from core.models.user import User
 
@@ -37,12 +37,12 @@ async def create_post(
     return await post_service.create_post(user, post_create)
 
 
-@router.get("/{username}/posts/{post_id}",
+@router.get("/{username}/posts/{obj_id}",
             response_model=PostResponse,
             status_code=status.HTTP_200_OK)
 async def get_one_post(
     post_service: Annotated[PostService, Depends(PostService)],
-    post_owner: Annotated[User, Depends(UserService.check_user_owns_post)],
+    post_owner: Annotated[User, Depends(GetUserWithObjId("post"))],
 ) -> PostResponse:
     return await post_service.get_post(post_id=post_owner.posts[0].id)
 
@@ -57,8 +57,8 @@ async def get_all_user_posts(
     return await post_service.get_user_posts_by_username(username)
 
 
-@router.patch("/posts/{post_id}",
-              response_model=PostResponse,
+@router.patch("/posts/{obj_id}",
+              response_model=PostUpdateResponse,
               status_code=status.HTTP_200_OK)
 async def update_post(
     user: Annotated[User, Depends(IsOwner("post"))],
@@ -67,7 +67,7 @@ async def update_post(
     text: str = Form(None),
     sub_tier_id: int | None = Form(None),
     file: Annotated[UploadFile | str | None, File()] = None,
-) -> PostResponse:
+) -> PostUpdateResponse:
     file_url = file_service.get_post_file_url(file)
     # TODO: Finish backgruond file save.
     file_service.save_file(file, file_url)
@@ -83,7 +83,7 @@ async def update_post(
     )
 
 
-@router.delete("/posts/{post_id}")
+@router.delete("/posts/{obj_id}")
 async def delete_post(
     user: Annotated[User, Depends(IsOwner("post"))],
     post_service: Annotated[PostService, Depends(PostService)],

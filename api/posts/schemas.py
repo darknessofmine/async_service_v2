@@ -29,3 +29,14 @@ class PostResponse(BaseModel):
     created: datetime
     updated: datetime | None = None
     comments: list[CommentResponse]
+
+
+class PostUpdateResponse(BaseModel):
+    id: int
+    user_id: int
+    title: str
+    text: str | None = None
+    file_url: str | None = None
+    sub_tier_id: int | None = None
+    created: datetime
+    updated: datetime | None = None

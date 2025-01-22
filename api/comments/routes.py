@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Form, status
 from .schemas import CommentCreate, CommentResponse, CommentUpdate
 from .services import CommentService
 from api.auth.permissions import IsOwner, Permissions
-from api.users.services import UserService
+from api.users.services import GetUserWithObjId
 from core.models import User
 
 
@@ -14,12 +14,12 @@ router = APIRouter(
 )
 
 
-@router.post("/{username}/posts/{post_id}/comments",
+@router.post("/{username}/posts/{obj_id}/comments",
              response_model=CommentResponse,
              status_code=status.HTTP_201_CREATED)
 async def create_comment(
     user: Annotated[User, Depends(Permissions("is_verified"))],
-    post_owner: Annotated[User, Depends(UserService.check_user_owns_post)],
+    post_owner: Annotated[User, Depends(GetUserWithObjId("post"))],
     comment_service: Annotated[CommentService, Depends(CommentService)],
     comment: CommentCreate = Form(...),
 ) -> CommentResponse:
@@ -30,7 +30,7 @@ async def create_comment(
     )
 
 
-@router.patch("/comments/{comment_id}",
+@router.patch("/comments/{obj_id}",
               response_model=CommentResponse,
               status_code=status.HTTP_200_OK)
 async def update_comment(
@@ -44,7 +44,7 @@ async def update_comment(
     )
 
 
-@router.delete("/comments/{comment_id}",
+@router.delete("/comments/{obj_id}",
                status_code=status.HTTP_204_NO_CONTENT)
 async def delete_comment(
     user: Annotated[User, Depends(IsOwner("comment"))],
