@@ -96,9 +96,8 @@ class IsOwner:
         token: Annotated[str, Depends(settings.auth.oauth2_scheme)],
     ) -> User:
         validated_token = token_utils.validate_token(token, "access")
-        get_user_with_obj_id = GetUserWithObjId(self.obj_name)
         try:
-            return await get_user_with_obj_id(
+            return await GetUserWithObjId(self.obj_name)(
                 username=validated_token.get("sub"),
                 obj_id=obj_id,
                 user_repo=user_repo,

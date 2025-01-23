@@ -34,7 +34,7 @@ class SubTierService:
             error_field = str(orig_detail).split("\"")[3]
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Subscription with {error_field} already exists!",
+                detail=f"Subscription tier with {error_field} already exists!",
             )
 
     async def get_sub_tier_list_by_username(
