@@ -149,12 +149,12 @@ class GetUserWithObjId:
                 return_model=True,
             )
         )
-        if user is not None:
-            return user
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=(
-                f"User ({username}) doesn't have "
-                f"{self.obj_name} with id={obj_id}."
-            ),
-        )
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=(
+                    f"User '{username}' doesn't have "
+                    f"{self.obj_name} with id={obj_id}."
+                ),
+            )
+        return user

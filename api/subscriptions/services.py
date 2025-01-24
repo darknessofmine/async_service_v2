@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
+from . import utils
 from .repositories import SubsciptionRepo
 from core.models import Subscription
 
@@ -20,11 +21,7 @@ class SubscriptionService:
         client_id: int,
         sub_tier_id: int | None = None,
     ) -> Subscription:
-        if owner_id == client_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You can't subscribe yourself.",
-            )
+        utils.client_is_not_sub_owner_or_400(client_id, owner_id)
         subscription = await self.get_one_or_none_by_client_owner_id(
             owner_id=owner_id,
             client_id=client_id,
@@ -37,7 +34,7 @@ class SubscriptionService:
                 )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You already have chosen subscription tier.",
+                detail="You are already subscribed to chosen tier.",
             )
         else:
             return await self.create_subscription(
@@ -88,6 +85,32 @@ class SubscriptionService:
             update_dict={"sub_tier_id": sub_tier_id},
             filters={"id": subscrption_id},
             return_result=True,
+        )
+
+    async def unsubscribe_from_current_tier(
+        self,
+        owner_id: int,
+        client_id: int,
+        sub_tier_id: int,
+    ) -> None:
+        utils.client_is_not_sub_owner_or_400(client_id, owner_id)
+        subscription = await self.get_one_or_none_by_client_owner_id(
+            owner_id=owner_id,
+            client_id=client_id,
+        )
+        if subscription:
+            if subscription.sub_tier_id == sub_tier_id:
+                return await self.change_subscription_tier(
+                    subscrption_id=subscription.id,
+                    sub_tier_id=None,
+                )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="You are not subscribed to chosen tier."
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You are not subscribed to any tier.",
         )
 
     async def delete_subsciption(self, subscrption_id: int) -> None:
