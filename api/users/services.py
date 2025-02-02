@@ -113,6 +113,21 @@ class UserService:
         """
         await self.user_repo.delete(filters={"username": user.username})
 
+    @staticmethod
+    async def get_user_by_username(
+        username: Annotated[str, Path],
+        user_repo: Annotated[UserRepo, Depends(UserRepo)],
+    ) -> "User":
+        user = await user_repo.get_one(
+            filters={"username": username},
+        )
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User with such username doesn't exist.",
+            )
+        return user
+
 
 class GetUserWithObjId:
     RELATED_MODELS_BY_OBJ_NAME = {

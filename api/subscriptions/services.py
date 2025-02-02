@@ -21,10 +21,12 @@ class SubscriptionService:
         client_id: int,
         sub_tier_id: int | None = None,
     ) -> Subscription:
-        utils.client_is_not_sub_owner_or_400(client_id, owner_id)
-        subscription = await self.get_one_or_none_by_client_owner_id(
-            owner_id=owner_id,
-            client_id=client_id,
+        utils.client_is_not_sub_owner_or_403(client_id, owner_id)
+        subscription = await self.sub_repo.get_one(
+            filters={
+                "owner_id": owner_id,
+                "sub_id": client_id,
+            },
         )
         if subscription is not None:
             if subscription.sub_tier_id != sub_tier_id:
@@ -64,23 +66,11 @@ class SubscriptionService:
                 detail=f"Subscription with {error_field} already exists!",
             )
 
-    async def get_one_or_none_by_client_owner_id(
-        self,
-        owner_id: int,
-        client_id: int,
-    ) -> Subscription | None:
-        return await self.sub_repo.get_one(
-            filters={
-                "owner_id": owner_id,
-                "sub_id": client_id,
-            }
-        )
-
     async def change_subscription_tier(
         self,
         subscrption_id: int,
         sub_tier_id: int,
-    ) -> Subscription:
+    ) -> Subscription | None:
         return await self.sub_repo.update(
             update_dict={"sub_tier_id": sub_tier_id},
             filters={"id": subscrption_id},
@@ -93,10 +83,12 @@ class SubscriptionService:
         client_id: int,
         sub_tier_id: int,
     ) -> None:
-        utils.client_is_not_sub_owner_or_400(client_id, owner_id)
-        subscription = await self.get_one_or_none_by_client_owner_id(
-            owner_id=owner_id,
-            client_id=client_id,
+        utils.client_is_not_sub_owner_or_403(client_id, owner_id)
+        subscription = await self.sub_repo.get_one(
+            filters={
+                "owner_id": owner_id,
+                "sub_id": client_id,
+            },
         )
         if subscription:
             if subscription.sub_tier_id == sub_tier_id:
@@ -112,6 +104,20 @@ class SubscriptionService:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You are not subscribed to any tier.",
         )
+
+    async def follow(self, owner_id: int, client_id: int) -> Subscription:
+        utils.client_is_not_sub_owner_or_403(client_id, owner_id)
+        data_dict = {
+            "owner_id": owner_id,
+            "sub_id": client_id,
+        }
+        subscription = await self.sub_repo.get_one(filters=data_dict)
+        if subscription:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You are already subscribed.",
+            )
+        return await self.sub_repo.create(data_dict)
 
     async def delete_subsciption(self, subscrption_id: int) -> None:
         await self.sub_repo.delete(filters={"id": subscrption_id})
