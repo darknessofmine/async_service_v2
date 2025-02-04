@@ -2,7 +2,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
-from mixins import IntIdPkMixin
+from .mixins import IntIdPkMixin
 
 
 class Follow(Base, IntIdPkMixin):
