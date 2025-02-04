@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from core.models import (
         AccessToken,
         Comment,
+        Follow,
         Post,
         Profile,
         Subscription,
@@ -28,6 +29,7 @@ class User(Base, IntIdPkMixin):
     )
     password: Mapped[str] = mapped_column(String(256))
     email: Mapped[str] = mapped_column(String(256), unique=True)
+
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_author: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -51,4 +53,12 @@ class User(Base, IntIdPkMixin):
     subscribers: Mapped[Optional[list["Subscription"]]] = relationship(
         back_populates="sub",
         foreign_keys="Subscription.owner_id",
+    )
+    follows: Mapped[Optional[list["Follow"]]] = relationship(
+        back_populates="owner",
+        foreign_keys="Follow.client_id",
+    )
+    followers: Mapped[Optional[list["Follow"]]] = relationship(
+        back_populates="client",
+        foreign_keys="Follow.owner_id",
     )
