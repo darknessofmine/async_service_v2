@@ -2,6 +2,7 @@ __all__ = (
     "AccessToken",
     "Base",
     "Comment",
+    "Follow",
     "Post",
     "Profile",
     "Subscription",
@@ -12,6 +13,7 @@ __all__ = (
 from .access_token import AccessToken
 from .base import Base
 from .comment import Comment
+from .follow import Follow
 from .post import Post
 from .profile import Profile
 from .subscription import Subscription
