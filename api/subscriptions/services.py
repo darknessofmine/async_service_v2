@@ -35,7 +35,7 @@ class SubscriptionService:
                     sub_tier_id=sub_tier_id,
                 )
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail="You are already subscribed to chosen tier.",
             )
         else:
@@ -62,7 +62,7 @@ class SubscriptionService:
             orig_detail = error.__dict__["orig"]
             error_field = str(orig_detail).split("\"")[3]
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Subscription with {error_field} already exists!",
             )
 
@@ -104,20 +104,6 @@ class SubscriptionService:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You are not subscribed to any tier.",
         )
-
-    async def follow(self, owner_id: int, client_id: int) -> Subscription:
-        utils.client_is_not_sub_owner_or_403(client_id, owner_id)
-        data_dict = {
-            "owner_id": owner_id,
-            "sub_id": client_id,
-        }
-        subscription = await self.sub_repo.get_one(filters=data_dict)
-        if subscription:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You are already subscribed.",
-            )
-        return await self.sub_repo.create(data_dict)
 
     async def delete_subsciption(self, subscrption_id: int) -> None:
         await self.sub_repo.delete(filters={"id": subscrption_id})
