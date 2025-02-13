@@ -101,7 +101,7 @@ async def send_verification_email(
     tasks.send_verification_url.delay(current_user.email, url)
     return {
         "message": (
-            "Verification message has been sent to you!"
+            "Verification message has been sent to you! "
             "Please check your email."
         )
     }

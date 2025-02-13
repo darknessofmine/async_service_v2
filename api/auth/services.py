@@ -98,10 +98,9 @@ class AuthService:
         """
         Verify user by `verification_token`.
         """
-        user = await AuthService.get_user_by_token(
-            token=token,
-            expected_type="verification",
-            user_repo=self.user_repo,
+        validated_token = token_utils.validate_token(token, "verification")
+        user = await self.user_repo.get_one(
+            filters={"username": validated_token.get("sub")},
         )
         await self.user_repo.update(
             update_dict={"is_verified": True},
